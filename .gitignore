@@ -1,0 +1,7 @@
+# Directorio de datos (no subir)
+Datos Datalogger/
+
+# Archivos Python estándar
+__pycache__/
+*.pyc
+*.pyo
