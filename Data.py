@@ -5,7 +5,7 @@ import matplotlib.dates as mdates
 import pandas as pd
 import os 
 import chardet
-import sys
+
 #%%
 
 ##### IMPORT DATA SECTION #####
@@ -82,7 +82,7 @@ fallo_lectura_arch = []
 iter = 0
 
 print(f"[INFO] Comienza el procesado de archivos:")
-for i in Dataloggerfiles[30:]:
+for i in Dataloggerfiles[180:]:
 
     try:
         # print(f"Abriendo archivo {i}")
@@ -142,7 +142,8 @@ for i in Dataloggerfiles[30:]:
 
 print("-" * 50)
 print(f"Procesamiento del header completado! {iter} archivos en total.")
-print(f"Dataframe creado: {DataLoggerDataFrame.shape[0]} filas x {DataLoggerDataFrame.shape[1]} columnas")
+print(f"DataFrame creado: {DataLoggerDataFrame.shape[0]} filas x {DataLoggerDataFrame.shape[1]} columnas")
+# El DataFrame se forma rellenando filas en las 83 columnas que vienen del Datalogger, una detrás de otra, un día de medidas detrás de otro
 print("-" * 50)
 
 # Posible fallo de lectura en archivos

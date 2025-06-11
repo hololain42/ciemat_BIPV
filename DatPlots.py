@@ -2,11 +2,17 @@
 
 from Data import *
 
-
+# Intervalo de tiempo para la gráfica (en horas)
 TickInterval = 15
+# Número de registros que vamos a representar en las gráficas
 DataLength = 10000
+# 10000 datos minutales se corresponde con aproximadamente 6.5 días
 
     ### DATETIME TO PLOT ###
+    
+# DataLoggerDataFrame["Date_local"] => 03/06/2025  7:01:13
+# output de pd.to_datetime: 03-06-2025 07:01:13
+
 Date = pd.to_datetime(DataLoggerDataFrame["Date_local"], dayfirst = True)
 
 
@@ -17,33 +23,82 @@ IrradianciaPiranometro_Izquierda = DataLoggerDataFrame["Canal 306-Canal_306_G3_i
 IrradianciaPiranometro_Arriba    = DataLoggerDataFrame["Canal 305-Canal_305_G2_arriba_[W/m2] "].astype("float64")
 IrradianciaPiranometro_Abajo   = DataLoggerDataFrame["Canal 304-Canal_304_G1_abajo_[W/m2] "].astype("float64")
 
+# Limpiamos datos negativos (los ponemos a 0, ya que la irradiancia nunca puede ser negativa)
 IrradianciaPiranometro.loc[IrradianciaPiranometro < 0] = 0
 IrradianciaPiranometro_Izquierda.loc[IrradianciaPiranometro < 0] = 0
 IrradianciaPiranometro_Arriba.loc[IrradianciaPiranometro < 0] = 0
 IrradianciaPiranometro_Abajo.loc[IrradianciaPiranometro < 0] = 0
 
+
+"""
+Creamos el DataFrame de Irradiancia del piranómetro:
+    pd.concat() combina dos series de pandas en un solo DataFrame:
+        Date: Serie con las fechas
+        IrradianciaPiranometro: Serie con los valores de irradiancia del piranómetro
+        axis=1: Combinamos ambas series como columnas, una al lado de la otra
+    Output: DataFrame con dos columnas:
+        Una columna con las fechas (mantiene el nombre original "Date_local")
+        Una columna con los valores de irradiancia
+    .set_index("Date_local", inplace=True) convierte la columna "Date_local" en el índice del DataFrame:
+        "Date_local" deja de ser una columna "normal" y pasa a ser el índice (etiqueta de las filas)
+        inplace=True: Modifica el DataFrame original directamente, sin crear una copia
+
+Resultado final: Un DataFrame indexado por fechas con una sola columna de datos de irradiancia
+"""
+
 DataFrame_Irradiancia = pd.concat([Date,IrradianciaPiranometro], axis=1)
 DataFrame_Irradiancia.set_index("Date_local", inplace=True)
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], IrradianciaPiranometro[:DataLength], linewidth=1.5, label= "Irradiancia piranómetro ")
-plt.grid()
-plt.ylabel('Irradiancia ($W/m^{2}$)')
-plt.xlabel('Fecha')
-plt.legend()
+# Ploteamos la irradiancia del piranómetro
+fig_Gpyr = plt.figure(figsize=(12, 8))
+fig_Gpyr.canvas.manager.set_window_title('Irradiancia del piranómetro')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_Gpyr = fig_Gpyr.add_subplot(111)
+ax_Gpyr.set_title('Irradiancia del piranómetro', fontsize=12, fontweight='normal')
+
+ax_Gpyr.plot(Date[:DataLength], IrradianciaPiranometro[:DataLength], linewidth=1.5, label= "Irradiancia del piranómetro ")
+
+ax_Gpyr.set_xlabel('Fecha')
+ax_Gpyr.set_ylabel('Irradiancia ($W/m^{2}$)')
+ax_Gpyr.legend(loc='best')
+ax_Gpyr.grid(True, alpha=0.7)
+
+ax_Gpyr.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_Gpyr.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_Gpyr.autofmt_xdate() 
+
+fig_Gpyr.tight_layout()
+fig_Gpyr.show()
 
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate() 
-plt.show()
+"""
+    Definimos la función combine_series_list para arreglar cualquier fallo en los sensores de temperatura. 
+    Por ejemplo, si falla el sensor de la célula 1, asumimos que la célula 2 tiene la misma temperatura y completamos el dato faltante 
+    de la 1 con el dato medido de la 2.
+        pandas.DataFrame.combine_first(series) es una función que modifica valores en caso necesario
+            · Si 'result' tiene un valor, ese valor se mantiene
+            · Si 'result' está vacío (NaN), toma el valor de 'series'
+        De esta forma, combinamos las listas entre sí para que ninguna tenga un dato vacío
 
+    Luego, rellenamos una lista con las columnas cuyo header contenga 'Tantra1':
+        lt_temp = [col for col in DataLoggerDataFrame.columns if 'Tantra1' in col]
+    
+    Después vamos rellenando otra lista con los datos (importados como float64) y combinamos todas las listas en una sola, Temp_Antra_1, que
+    incluya todas las listas redundantes (distintos sensores que midan la temperatura de la célula 1 de antracita). Hacemos esto así para que,
+    si se decide incluir más sensores de temperatura, podamos combinar los sensores en una sola lista por si alguno falla.
+        Temp_Antra_lt = []
+        for i in lt_temp:
+            Temp_Antra_lt.append(DataLoggerDataFrame[i].astype("float64"))
+        Temp_Antra_1 = combine_series_list(Temp_Antra_lt)
+
+"""
 
 def combine_series_list(series_list):
-    result = series_list[0]
+    result = series_list[0] # Toma la primera serie como base
     
-    for series in series_list[1:]:
-        result = result.combine_first(series)
+    for series in series_list[1:]: # Para cada serie restante
+        result = result.combine_first(series) # Rellena huecos (si hay alguno) con los valores de las otras listas
     
     return result
 
@@ -67,7 +122,11 @@ for i in lt_temp:
     Temp_Antra_lt.append(DataLoggerDataFrame[i].astype("float64"))
 Temp_Antra_1 = combine_series_list(Temp_Antra_lt)
 
-Temp_Antra_2 = DataLoggerDataFrame["Canal 310-Canal_310_Tantra2_[ºC] "].astype("float64")
+lt_temp = [col for col in DataLoggerDataFrame.columns if 'Tantra2' in col]
+Temp_Antra_lt = []
+for i in lt_temp:
+    Temp_Antra_lt.append(DataLoggerDataFrame[i].astype("float64"))
+Temp_Antra_2 = combine_series_list(Temp_Antra_lt)
 
 lt_temp = [col for col in DataLoggerDataFrame.columns if 'Tantra3' in col]
 Temp_Antra_lt = []
@@ -119,7 +178,6 @@ for i in lt_temp:
     Temp_Green_lt.append(DataLoggerDataFrame[i].astype("float64"))
 Temp_Green_4 = combine_series_list(Temp_Green_lt)
 
-
     #################
     ### TERRACOTA ###
     #################
@@ -165,183 +223,244 @@ Temp_Terra_4 = combine_series_list(Temp_Terracota_lt)
     ### Antracita ###
     #################
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Vm_Antra_1[:DataLength], linewidth=1.5, label= "Antra N°1")
-plt.plot(Date[:DataLength], Vm_Antra_2[:DataLength], linewidth=1.5, label= "Antra N°2")
-plt.plot(Date[:DataLength], Vm_Antra_3[:DataLength], linewidth=1.5, label= "Antra N°3")
-plt.plot(Date[:DataLength], Vm_Antra_4[:DataLength], linewidth=1.5, label= "Antra N°4")
-plt.grid()
-plt.ylabel('Voltaje Vm (V)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Voltaje (V) individual para cada célula Antracita (Array en serie)")
+# Plots Voltaje
+fig_V_antracita = plt.figure(figsize=(10, 6))
+fig_V_antracita.canvas.manager.set_window_title('Voltaje células Antracita')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_V_antracita = fig_V_antracita.add_subplot(111)
+ax_V_antracita.set_title("Voltaje (V) individual para cada célula Antracita (Array en serie)", fontsize=12, fontweight='normal')
+
+ax_V_antracita.plot(Date[:DataLength], Vm_Antra_1[:DataLength], linewidth=1.5, label= "Antra N°1")
+ax_V_antracita.plot(Date[:DataLength], Vm_Antra_2[:DataLength], linewidth=1.5, label= "Antra N°2")
+ax_V_antracita.plot(Date[:DataLength], Vm_Antra_3[:DataLength], linewidth=1.5, label= "Antra N°3")
+ax_V_antracita.plot(Date[:DataLength], Vm_Antra_4[:DataLength], linewidth=1.5, label= "Antra N°4")
+
+ax_V_antracita.set_xlabel('Fecha')
+ax_V_antracita.set_ylabel('Voltaje Vm (V)')
+ax_V_antracita.legend(loc='best')
+ax_V_antracita.grid(True, alpha=0.7)
+
+ax_V_antracita.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_V_antracita.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_V_antracita.autofmt_xdate() 
+
+fig_V_antracita.tight_layout()
+fig_V_antracita.show()
 
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate() 
-plt.show()
+# Plots Corriente
+fig_I_antracita = plt.figure(figsize=(10, 6))
+fig_I_antracita.canvas.manager.set_window_title('Corriente células Antracita')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_I_antracita = fig_I_antracita.add_subplot(111)
+ax_I_antracita.set_title("Corriente (A) individual para cada célula Antracita (Array en serie)", fontsize=12, fontweight='normal')
+
+ax_I_antracita.plot(Date[:DataLength], Im_Antra_1[:DataLength], linewidth=1.5, label= "Antra N°1")
+ax_I_antracita.plot(Date[:DataLength], Im_Antra_2[:DataLength], linewidth=1.5, label= "Antra N°2")
+ax_I_antracita.plot(Date[:DataLength], Im_Antra_3[:DataLength], linewidth=1.5, label= "Antra N°3")
+ax_I_antracita.plot(Date[:DataLength], Im_Antra_4[:DataLength], linewidth=1.5, label= "Antra N°4")
+
+ax_I_antracita.set_xlabel('Fecha')
+ax_I_antracita.set_ylabel('Corriente Im (A)')
+ax_I_antracita.legend(loc='best')
+ax_I_antracita.grid(True, alpha=0.7)
+
+ax_I_antracita.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_I_antracita.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_I_antracita.autofmt_xdate() 
+
+fig_I_antracita.tight_layout()
+fig_I_antracita.show()
 
 
+# Plots Temperatura
+fig_T_antracita = plt.figure(figsize=(10, 6))
+fig_T_antracita.canvas.manager.set_window_title('Temperatura células Antracita')
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Im_Antra_1[:DataLength], linewidth=1.5, label= "Antra N°1")
-plt.plot(Date[:DataLength], Im_Antra_2[:DataLength], linewidth=1.5, label= "Antra N°2")
-plt.plot(Date[:DataLength], Im_Antra_3[:DataLength], linewidth=1.5, label= "Antra N°3")
-plt.plot(Date[:DataLength], Im_Antra_4[:DataLength], linewidth=1.5, label= "Antra N°4")
-plt.grid()
-plt.ylabel('Corriente Im (A)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Corriente (A) individual para cada célula Antracita (Array en serie)")
+# Definimos objeto ax para distinguir entre figuras
+ax_T_antracita = fig_T_antracita.add_subplot(111)
+ax_T_antracita.set_title("Temperatura (°C) individual para cada célula Antracita (Array en serie)", fontsize=12, fontweight='normal')
 
+ax_T_antracita.plot(Date[:DataLength], Temp_Antra_1[:DataLength], linewidth=1.5, label= "Antra N°1")
+ax_T_antracita.plot(Date[:DataLength], Temp_Antra_2[:DataLength], linewidth=1.5, label= "Antra N°2")
+ax_T_antracita.plot(Date[:DataLength], Temp_Antra_3[:DataLength], linewidth=1.5, label= "Antra N°3")
+ax_T_antracita.plot(Date[:DataLength], Temp_Antra_4[:DataLength], linewidth=1.5, label= "Antra N°4")
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+ax_T_antracita.set_xlabel('Fecha')
+ax_T_antracita.set_ylabel('Temperatura (°C)')
+ax_T_antracita.legend(loc='best')
+ax_T_antracita.grid(True, alpha=0.7)
 
+ax_T_antracita.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_T_antracita.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_T_antracita.autofmt_xdate() 
 
-
-
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Temp_Antra_1[:DataLength], linewidth=1.5, label= "Antra N°1")
-plt.plot(Date[:DataLength], Temp_Antra_2[:DataLength], linewidth=1.5, label= "Antra N°2")
-plt.plot(Date[:DataLength], Temp_Antra_3[:DataLength], linewidth=1.5, label= "Antra N°3")
-plt.plot(Date[:DataLength], Temp_Antra_4[:DataLength], linewidth=1.5, label= "Antra N°4")
-plt.grid()
-plt.ylabel('Temperatura (°C)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Temperatura (°C) individual para cada célula Antracita (Array en serie)")
-
-
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
-
+fig_T_antracita.tight_layout()
+fig_T_antracita.show()
 
     #############
     ### GREEN ###
     #############
 
+# Plots Voltaje
+fig_V_green = plt.figure(figsize=(10, 6))
+fig_V_green.canvas.manager.set_window_title('Voltaje células Green')
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Vm_Green_1[:DataLength], linewidth=1.5, label= "Green N°1")
-plt.plot(Date[:DataLength], Vm_Green_2[:DataLength], linewidth=1.5, label= "Green N°2")
-plt.plot(Date[:DataLength], Vm_Green_3[:DataLength], linewidth=1.5, label= "Green N°3")
-plt.plot(Date[:DataLength], Vm_Green_4[:DataLength], linewidth=1.5, label= "Green N°4")
-plt.grid()
-plt.ylabel('Voltaje Vm (V)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Voltaje (V) individual para cada célula Green (Array en serie)")
+# Definimos objeto ax para distinguir entre figuras
+ax_V_green = fig_V_green.add_subplot(111)
+ax_V_green.set_title("Voltaje (V) individual para cada célula Green (Array en serie)", fontsize=12, fontweight='normal')
 
+ax_V_green.plot(Date[:DataLength], Vm_Green_1[:DataLength], linewidth=1.5, label= "Green N°1")
+ax_V_green.plot(Date[:DataLength], Vm_Green_2[:DataLength], linewidth=1.5, label= "Green N°2")
+ax_V_green.plot(Date[:DataLength], Vm_Green_3[:DataLength], linewidth=1.5, label= "Green N°3")
+ax_V_green.plot(Date[:DataLength], Vm_Green_4[:DataLength], linewidth=1.5, label= "Green N°4")
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate() 
-plt.show()
+ax_V_green.set_xlabel('Fecha')
+ax_V_green.set_ylabel('Voltaje Vm (V)')
+ax_V_green.legend(loc='best')
+ax_V_green.grid(True, alpha=0.7)
 
+ax_V_green.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_V_green.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_V_green.autofmt_xdate() 
 
-
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Im_Green_1[:DataLength], linewidth=1.5, label= "Green N°1")
-plt.plot(Date[:DataLength], Im_Green_2[:DataLength], linewidth=1.5, label= "Green N°2")
-plt.plot(Date[:DataLength], Im_Green_3[:DataLength], linewidth=1.5, label= "Green N°3")
-plt.plot(Date[:DataLength], Im_Green_4[:DataLength], linewidth=1.5, label= "Green N°4")
-plt.grid()
-plt.ylabel('Corriente Im (A)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Corriente (A) individual para cada célula Green (Array en serie)")
+fig_V_green.tight_layout()
+fig_V_green.show()
 
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+# Plots Corriente
+fig_I_green = plt.figure(figsize=(10, 6))
+fig_I_green.canvas.manager.set_window_title('Corriente células Green')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_I_green = fig_I_green.add_subplot(111)
+ax_I_green.set_title("Corriente (A) individual para cada célula Green (Array en serie)", fontsize=12, fontweight='normal')
+
+ax_I_green.plot(Date[:DataLength], Im_Green_1[:DataLength], linewidth=1.5, label= "Green N°1")
+ax_I_green.plot(Date[:DataLength], Im_Green_2[:DataLength], linewidth=1.5, label= "Green N°2")
+ax_I_green.plot(Date[:DataLength], Im_Green_3[:DataLength], linewidth=1.5, label= "Green N°3")
+ax_I_green.plot(Date[:DataLength], Im_Green_4[:DataLength], linewidth=1.5, label= "Green N°4")
+
+ax_I_green.set_xlabel('Fecha')
+ax_I_green.set_ylabel('Corriente Im (A)')
+ax_I_green.legend(loc='best')
+ax_I_green.grid(True, alpha=0.7)
+
+ax_I_green.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_I_green.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_I_green.autofmt_xdate() 
+
+fig_I_green.tight_layout()
+fig_I_green.show()
 
 
+# Plots Temperatura
+fig_T_green = plt.figure(figsize=(10, 6))
+fig_T_green.canvas.manager.set_window_title('Temperatura células Green')
 
+# Definimos objeto ax para distinguir entre figuras
+ax_T_green = fig_T_green.add_subplot(111)
+ax_T_green.set_title("Temperatura (°C) individual para cada célula Green (Array en serie)", fontsize=12, fontweight='normal')
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Temp_Green_1[:DataLength], linewidth=1.5, label= "Green N°1")
-plt.plot(Date[:DataLength], Temp_Green_2[:DataLength], linewidth=1.5, label= "Green N°2")
-plt.plot(Date[:DataLength], Temp_Green_3[:DataLength], linewidth=1.5, label= "Green N°3")
-plt.plot(Date[:DataLength], Temp_Green_4[:DataLength], linewidth=1.5, label= "Green N°4")
-plt.grid()
-plt.ylabel('Temperatura (°C)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Temperatura (°C) individual para cada célula Green (Array en serie)")
+ax_T_green.plot(Date[:DataLength], Temp_Green_1[:DataLength], linewidth=1.5, label= "Green N°1")
+ax_T_green.plot(Date[:DataLength], Temp_Green_2[:DataLength], linewidth=1.5, label= "Green N°2")
+ax_T_green.plot(Date[:DataLength], Temp_Green_3[:DataLength], linewidth=1.5, label= "Green N°3")
+ax_T_green.plot(Date[:DataLength], Temp_Green_4[:DataLength], linewidth=1.5, label= "Green N°4")
 
+ax_T_green.set_xlabel('Fecha')
+ax_T_green.set_ylabel('Temperatura (°C)')
+ax_T_green.legend(loc='best')
+ax_T_green.grid(True, alpha=0.7)
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+ax_T_green.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_T_green.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_T_green.autofmt_xdate() 
+
+fig_T_green.tight_layout()
+fig_T_green.show()
 
     #################
     ### TERRACOTA ###
     #################
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Vm_Terra_1[:DataLength], linewidth=1.5, label= "Terra N°1")
-plt.plot(Date[:DataLength], Vm_Terra_2[:DataLength], linewidth=1.5, label= "Terra N°2")
-plt.plot(Date[:DataLength], Vm_Terra_3[:DataLength], linewidth=1.5, label= "Terra N°3")
-plt.plot(Date[:DataLength], Vm_Terra_4[:DataLength], linewidth=1.5, label= "Terra N°4")
-plt.grid()
-plt.ylabel('Voltaje Vm (V)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Voltaje (V) individual para cada célula Terracota (Array en serie)")
+# Plots Voltaje
+fig_V_terra = plt.figure(figsize=(10, 6))
+fig_V_terra.canvas.manager.set_window_title('Voltaje células Terracota')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_V_terra = fig_V_terra.add_subplot(111)
+ax_V_terra.set_title("Voltaje (V) individual para cada célula Terracota (Array en serie)", fontsize=12, fontweight='normal')
+
+ax_V_terra.plot(Date[:DataLength], Vm_Terra_1[:DataLength], linewidth=1.5, label= "Terra N°1")
+ax_V_terra.plot(Date[:DataLength], Vm_Terra_2[:DataLength], linewidth=1.5, label= "Terra N°2")
+ax_V_terra.plot(Date[:DataLength], Vm_Terra_3[:DataLength], linewidth=1.5, label= "Terra N°3")
+ax_V_terra.plot(Date[:DataLength], Vm_Terra_4[:DataLength], linewidth=1.5, label= "Terra N°4")
+
+ax_V_terra.set_xlabel('Fecha')
+ax_V_terra.set_ylabel('Voltaje Vm (V)')
+ax_V_terra.legend(loc='best')
+ax_V_terra.grid(True, alpha=0.7)
+
+ax_V_terra.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_V_terra.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_V_terra.autofmt_xdate() 
+
+fig_V_terra.tight_layout()
+fig_V_terra.show()
 
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate() 
-plt.show()
+# Plots Corriente
+fig_I_terra = plt.figure(figsize=(10, 6))
+fig_I_terra.canvas.manager.set_window_title('Corriente células Terracota')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_I_terra = fig_I_terra.add_subplot(111)
+ax_I_terra.set_title("Corriente (A) individual para cada célula Terracota (Array en serie)", fontsize=12, fontweight='normal')
+
+ax_I_terra.plot(Date[:DataLength], Im_Terra_1[:DataLength], linewidth=1.5, label= "Terra N°1")
+ax_I_terra.plot(Date[:DataLength], Im_Terra_2[:DataLength], linewidth=1.5, label= "Terra N°2")
+ax_I_terra.plot(Date[:DataLength], Im_Terra_3[:DataLength], linewidth=1.5, label= "Terra N°3")
+ax_I_terra.plot(Date[:DataLength], Im_Terra_4[:DataLength], linewidth=1.5, label= "Terra N°4")
+
+ax_I_terra.set_xlabel('Fecha')
+ax_I_terra.set_ylabel('Corriente Im (A)')
+ax_I_terra.legend(loc='best')
+ax_I_terra.grid(True, alpha=0.7)
+
+ax_I_terra.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_I_terra.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_I_terra.autofmt_xdate() 
+
+fig_I_terra.tight_layout()
+fig_I_terra.show()
 
 
+# Plots Temperatura
+fig_T_terra = plt.figure(figsize=(10, 6))
+fig_T_terra.canvas.manager.set_window_title('Temperatura células Terracota')
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Im_Terra_1[:DataLength], linewidth=1.5, label= "Terra N°1")
-plt.plot(Date[:DataLength], Im_Terra_2[:DataLength], linewidth=1.5, label= "Terra N°2")
-plt.plot(Date[:DataLength], Im_Terra_3[:DataLength], linewidth=1.5, label= "Terra N°3")
-plt.plot(Date[:DataLength], Im_Terra_4[:DataLength], linewidth=1.5, label= "Terra N°4")
-plt.grid()
-plt.ylabel('Corriente Im (A)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Corriente (A) individual para cada célula Terracota (Array en serie)")
+# Definimos objeto ax para distinguir entre figuras
+ax_T_terra = fig_T_terra.add_subplot(111)
+ax_T_terra.set_title("Temperatura (°C) individual para cada célula Terracota (Array en serie)", fontsize=12, fontweight='normal')
 
+ax_T_terra.plot(Date[:DataLength], Temp_Terra_1[:DataLength], linewidth=1.5, label= "Terra N°1")
+ax_T_terra.plot(Date[:DataLength], Temp_Terra_2[:DataLength], linewidth=1.5, label= "Terra N°2")
+ax_T_terra.plot(Date[:DataLength], Temp_Terra_3[:DataLength], linewidth=1.5, label= "Terra N°3")
+ax_T_terra.plot(Date[:DataLength], Temp_Terra_4[:DataLength], linewidth=1.5, label= "Terra N°4")
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+ax_T_terra.set_xlabel('Fecha')
+ax_T_terra.set_ylabel('Temperatura (°C)')
+ax_T_terra.legend(loc='best')
+ax_T_terra.grid(True, alpha=0.7)
 
+ax_T_terra.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_T_terra.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_T_terra.autofmt_xdate() 
 
-
-
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], Temp_Terra_1[:DataLength], linewidth=1.5, label= "Terra N°1")
-plt.plot(Date[:DataLength], Temp_Terra_2[:DataLength], linewidth=1.5, label= "Terra N°2")
-plt.plot(Date[:DataLength], Temp_Terra_3[:DataLength], linewidth=1.5, label= "Terra N°3")
-plt.plot(Date[:DataLength], Temp_Terra_4[:DataLength], linewidth=1.5, label= "Terra N°4")
-plt.grid()
-plt.ylabel('Temperatura (°C)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Temperatura (°C) individual para cada célula Terracota (Array en serie)")
-
-
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+fig_T_terra.tight_layout()
+fig_T_terra.show()
 
 
 #### INVERTER DATA ####
@@ -359,23 +478,19 @@ futuro. Fuese lo contrario, puede modificarse manteniendo los canales intactos.
 
 
 ### VOLTAJE ###
+# Canal 403: Voltaje de las células Antracita a la entrada del inversor
+#   - Suma de canales 401 y 402
+#   - Canal 401: Suma de Vm_antra1 y Vm_antra2
+#   - Canal 402: Suma de Vm_antra3 y Vm_antra4 
+#   - Por tanto, el canal 403 es la suma de los voltajes de las 4 células individuales (array en serie)
 
-#v1_input_Green = DataLoggerDataFrame["Canal 406-Canal_406_Vinversor-verde_406=404+405 "].astype("float64")
-#v2_input_Green = DataLoggerDataFrame["Canal 407-Canal_406_Vinversor-verde_406=404+405 "].astype("float64")
-#
-#v1_input_Terra = DataLoggerDataFrame["Canal 409-Canal_409_Vinversor-terra_409_407+408 "].astype("float64")
-#v2_input_Terra = DataLoggerDataFrame["Canal 410-Canal_409_Vinversor-terra_409_407+408 "].astype("float64")
-#
-#V_input_Antra = DataLoggerDataFrame["Canal 403-Canal_403_Vinversor-antra_403_401+402 "].astype("float64")
-#V_input_Green = v2_input_Green.combine_first(v1_input_Green)
-#V_input_Terra = v2_input_Terra.combine_first(v1_input_Terra)
-
+V_input_Antra = DataLoggerDataFrame["Canal 403-Canal_403_Vinversor-antra_403_401+402 "].astype("float64")
 V_input_Green = DataLoggerDataFrame["Canal 406-Canal_406_Vinversor-verde_406=404+405 "].astype("float64")
 V_input_Terra = DataLoggerDataFrame["Canal 409-Canal_409_Vinversor-terra_409_407+408 "].astype("float64")
-V_input_Antra = DataLoggerDataFrame["Canal 403-Canal_403_Vinversor-antra_403_401+402 "].astype("float64")
 
 
 ### CORRIENTE ###
+# Canal 217: Corriente de las células Antracita a la entrada del inversor (array en serie)
 
 I_input_Antra = DataLoggerDataFrame["Canal 217-Canal_217_Ientradainversor_antacita_[A] "].astype("float64")
 I_input_Green = DataLoggerDataFrame["Canal 218-Canal_218_Ientradainversor_verde_[A] "].astype("float64")
@@ -383,67 +498,91 @@ I_input_Terra = DataLoggerDataFrame["Canal 219-Canal_219_Ientradainversor_terrac
 
 
 ### POTENCIA ###
+# Hay un error en el nombre de los canales, PERO los valores de las celdas son correctos.
+#   - El header de P_input_Antra debería ser 403*217 (Vm_antra*Im_antra), sin embargo es 403*218 (Vm_antra*Im_verde)
+#   - Hemos comprobado que, pese al error en el header, los valores de las celdas se corresponden a multiplicar la columna 403 (Vm_antra) por la columna 217 (Im_antra)
+#   - Por tanto, error en el header pero los valores de la potencia si se corresponden con los de la antracita.
+#   - Esto también se aplica al 411 (células green). Está comprobado que pese al error en el header, los valores de las celdas se corresponden
+#     a multiplicar la columna 406 (Vm_verde) por la columna 218 (Im_verde)
 
 P_input_Antra = DataLoggerDataFrame["Canal 410-Canal_410_Pantra DC_410_403*218 "].astype("float64")
-
 P_input_Green = DataLoggerDataFrame["Canal 411-Canal_411_Pverde DC_411_406*217 "].astype("float64")
-
 P_input_Terra = DataLoggerDataFrame["Canal 412-Canal_412_Pterra DC_412_409*219 "].astype("float64")
 
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], V_input_Antra[:DataLength], linewidth=1.5, label= "Antra N°1")
-plt.plot(Date[:DataLength], V_input_Green[:DataLength], linewidth=1.5, label= "Green N°2")
-plt.plot(Date[:DataLength], V_input_Terra[:DataLength], linewidth=1.5, label= "Terra N°3")
+# Plots voltaje
+fig_V_microinversor = plt.figure(figsize=(10, 6))
+fig_V_microinversor.canvas.manager.set_window_title('Voltaje DC entrada microinversores')
 
-plt.grid()
-plt.ylabel('Voltaje (V)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Volataje (V) en DC de array de Antracita/Green/Terracota a la entrada del microinversor")
+# Definimos objeto ax para distinguir entre figuras
+ax_V_microinversor = fig_V_microinversor.add_subplot(111)
+ax_V_microinversor.set_title("Voltaje (V) en DC de array de Antracita/Green/Terracota a la entrada del microinversor", fontsize=12, fontweight='normal')
 
+ax_V_microinversor.plot(Date[:DataLength], V_input_Antra[:DataLength], linewidth=1.5, label= "Antracita")
+ax_V_microinversor.plot(Date[:DataLength], V_input_Green[:DataLength], linewidth=1.5, label= "Green")
+ax_V_microinversor.plot(Date[:DataLength], V_input_Terra[:DataLength], linewidth=1.5, label= "Terracota")
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+ax_V_microinversor.set_xlabel('Fecha')
+ax_V_microinversor.set_ylabel('Voltaje (V)')
+ax_V_microinversor.legend(loc='best')
+ax_V_microinversor.grid(True, alpha=0.7)
 
+ax_V_microinversor.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_V_microinversor.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_V_microinversor.autofmt_xdate() 
 
-
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], I_input_Antra[:DataLength], linewidth=1.5, label= "Antra N°1")
-plt.plot(Date[:DataLength], I_input_Green[:DataLength], linewidth=1.5, label= "Green N°2")
-plt.plot(Date[:DataLength], I_input_Terra[:DataLength], linewidth=1.5, label= "Terra N°3")
-plt.grid()
-plt.ylabel('Corriente (A)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Corriente (A) en DC de array de Antracita/Green/Terracota a la entrada del microinversor")
+fig_V_microinversor.tight_layout()
+fig_V_microinversor.show()
 
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+# Plots Corriente
+fig_I_microinversor = plt.figure(figsize=(10, 6))
+fig_I_microinversor.canvas.manager.set_window_title('Corriente DC entrada microinversores')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_I_microinversor = fig_I_microinversor.add_subplot(111)
+ax_I_microinversor.set_title("Corriente (A) en DC de array de Antracita/Green/Terracota a la entrada del microinversor", fontsize=12, fontweight='normal')
+
+ax_I_microinversor.plot(Date[:DataLength], I_input_Antra[:DataLength], linewidth=1.5, label= "Antracita")
+ax_I_microinversor.plot(Date[:DataLength], I_input_Green[:DataLength], linewidth=1.5, label= "Green")
+ax_I_microinversor.plot(Date[:DataLength], I_input_Terra[:DataLength], linewidth=1.5, label= "Terracota")
+
+ax_I_microinversor.set_xlabel('Fecha')
+ax_I_microinversor.set_ylabel('Corriente (A)')
+ax_I_microinversor.legend(loc='best')
+ax_I_microinversor.grid(True, alpha=0.7)
+
+ax_I_microinversor.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_I_microinversor.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_I_microinversor.autofmt_xdate() 
+
+fig_I_microinversor.tight_layout()
+fig_I_microinversor.show()
 
 
+# Plots potencia
+fig_P_microinversor = plt.figure(figsize=(10, 6))
+fig_P_microinversor.canvas.manager.set_window_title('Potencia DC entrada microinversores')
 
+# Definimos objeto ax para distinguir entre figuras
+ax_P_microinversor = fig_P_microinversor.add_subplot(111)
+ax_P_microinversor.set_title("Potencia (W) en DC de array de Antracita/Green/Terracota a la entrada del microinversor", fontsize=12, fontweight='normal')
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], P_input_Antra[:DataLength], linewidth=1.5, label= "Antra N°1")
-plt.plot(Date[:DataLength], P_input_Green[:DataLength], linewidth=1.5, label= "Green N°2")
-plt.plot(Date[:DataLength], P_input_Terra[:DataLength], linewidth=1.5, label= "Terra N°3")
-plt.grid()
-plt.ylabel('Potencia (W)')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Potencia (W) en DC de array de Antracita/Green/Terracota a la entrada del microinversor")
+ax_P_microinversor.plot(Date[:DataLength], P_input_Antra[:DataLength], linewidth=1.5, label= "Antracita")
+ax_P_microinversor.plot(Date[:DataLength], P_input_Green[:DataLength], linewidth=1.5, label= "Green")
+ax_P_microinversor.plot(Date[:DataLength], P_input_Terra[:DataLength], linewidth=1.5, label= "Terracota")
 
+ax_P_microinversor.set_xlabel('Fecha')
+ax_P_microinversor.set_ylabel('Potencia (W)')
+ax_P_microinversor.legend(loc='best')
+ax_P_microinversor.grid(True, alpha=0.7)
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+ax_P_microinversor.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_P_microinversor.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_P_microinversor.autofmt_xdate() 
+
+fig_P_microinversor.tight_layout()
+fig_P_microinversor.show()
 
 
     ###################
@@ -455,28 +594,34 @@ P_output_Antra = DataLoggerDataFrame["Canal 301-Canal_301_PAC_inversor_antracita
 P_output_Green = DataLoggerDataFrame["Canal 302-Canal_302_PAC_inversor_verde_[W] "].astype("float64")
 P_output_Terra = DataLoggerDataFrame["Canal 303-Canal_303_PAC_inversor_terracota_[W] "].astype("float64")
 
+# Plots potencia de salida del microinversor
+fig_P_output_microinversor = plt.figure(figsize=(10, 6))
+fig_P_output_microinversor.canvas.manager.set_window_title('Potencia AC salida microinversores')
 
+# Definimos objeto ax para distinguir entre figuras
+ax_P_output_microinversor = fig_P_output_microinversor.add_subplot(111)
+ax_P_output_microinversor.set_title("Potencia (W) en AC a la salida del microinversor", fontsize=12, fontweight='normal')
 
-plt.figure(figsize=(10, 6))
-plt.plot(Date[:DataLength], P_output_Antra[:DataLength], linewidth=1.5, label= "Antra N°1")
-plt.plot(Date[:DataLength], P_output_Green[:DataLength], linewidth=1.5, label= "Green N°2")
-plt.plot(Date[:DataLength], P_output_Terra[:DataLength], linewidth=1.5, label= "Terra N°3")
-plt.grid()
-plt.ylabel('Potencia (W) - Salida de Microinversores en AC')
-plt.xlabel('Fecha')
-plt.legend()
-plt.title("Potencia (W) en AC a la salida del microinversor")
+ax_P_output_microinversor.plot(Date[:DataLength], P_output_Antra[:DataLength], linewidth=1.5, label= "Antracita")
+ax_P_output_microinversor.plot(Date[:DataLength], P_output_Green[:DataLength], linewidth=1.5, label= "Green")
+ax_P_output_microinversor.plot(Date[:DataLength], P_output_Terra[:DataLength], linewidth=1.5, label= "Terracota")
 
+ax_P_output_microinversor.set_xlabel('Fecha')
+ax_P_output_microinversor.set_ylabel('Potencia (W) - Salida de Microinversores en AC')
+ax_P_output_microinversor.legend(loc='best')
+ax_P_output_microinversor.grid(True, alpha=0.7)
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
-plt.gcf().autofmt_xdate()  
-plt.show()
+ax_P_output_microinversor.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_P_output_microinversor.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_P_output_microinversor.autofmt_xdate() 
+
+fig_P_output_microinversor.tight_layout()
+fig_P_output_microinversor.show()
 
 
 
 """
-Hasta ahora se han importado datos que, en su pequeña minoría, han sido intercambiado
+Hasta ahora se han importado datos que, en su pequeña minoría, han sido intercambiados
 de canal (Caso de algunos voltajes de entrada, potencias de entrada al inversor), esto
 si bien solo afecta a los registros tempranos cercanos al comienzo del monitoreo,
 se puede asumir que los canales variarán a medida que se quiera monitorear aún más
