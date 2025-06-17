@@ -5,6 +5,10 @@ from datetime import time
 
 #%%
 
+# Informamos de que comienza la aplicación de filtros
+print(f"[INFO] Comienza la aplicación de filtros")
+print("-" * 50)
+
 # Filtro para los datos de corriente de los paneles solares en serie
 def filtro_corriente_serie(df):
 
@@ -311,5 +315,7 @@ def zeros(DataFrame):
 
     return df_procesado
 
-
+# Informamos de que todos los filtros han sido aplicados
+print(f"[INFO] Todas los filtros aplicados, submuestreo completado")
+print("-" * 50)
 # %%
