@@ -18,16 +18,23 @@ Date = pd.to_datetime(DataLoggerDataFrame["Date_local"], dayfirst = True)
 
     ### REGISTRO PIRANÓMETRO ###
 
-IrradianciaPiranometro = DataLoggerDataFrame["Canal 106-Canal_106_Gpyr_[W/m2] "].astype("float64")
-IrradianciaPiranometro_Izquierda = DataLoggerDataFrame["Canal 306-Canal_306_G3_izda_[W/m2] "].astype("float64")
-IrradianciaPiranometro_Arriba    = DataLoggerDataFrame["Canal 305-Canal_305_G2_arriba_[W/m2] "].astype("float64")
-IrradianciaPiranometro_Abajo   = DataLoggerDataFrame["Canal 304-Canal_304_G1_abajo_[W/m2] "].astype("float64")
+# Extraemos los datos de irradiancia del piranómetro y de las 3 células calibradas
+IrradianciaPiranometro               = DataLoggerDataFrame["Canal 106-Canal_106_Gpyr_[W/m2] "].astype("float64")
+IrradianciaCelulaCalibrada_Izquierda = DataLoggerDataFrame["Canal 306-Canal_306_G3_izda_[W/m2] "].astype("float64")
+IrradianciaCelulaCalibrada_Arriba    = DataLoggerDataFrame["Canal 305-Canal_305_G2_arriba_[W/m2] "].astype("float64")
+IrradianciaCelulaCalibrada_Abajo     = DataLoggerDataFrame["Canal 304-Canal_304_G1_abajo_[W/m2] "].astype("float64")
 
 # Limpiamos datos negativos (los ponemos a 0, ya que la irradiancia nunca puede ser negativa)
+# .loc permite establecer una condicion booleana (True/False para cada posición) y asignar un determinado valor en esa posición si la condición es True
 IrradianciaPiranometro.loc[IrradianciaPiranometro < 0] = 0
-IrradianciaPiranometro_Izquierda.loc[IrradianciaPiranometro < 0] = 0
-IrradianciaPiranometro_Arriba.loc[IrradianciaPiranometro < 0] = 0
-IrradianciaPiranometro_Abajo.loc[IrradianciaPiranometro < 0] = 0
+IrradianciaCelulaCalibrada_Izquierda.loc[IrradianciaCelulaCalibrada_Izquierda < 0] = 0
+IrradianciaCelulaCalibrada_Arriba.loc[IrradianciaCelulaCalibrada_Arriba < 0] = 0
+IrradianciaCelulaCalibrada_Abajo.loc[IrradianciaCelulaCalibrada_Abajo < 0] = 0
+
+# Extraemos los datos de temperatura ambiente y de temperatura de las células calibradas de arriba y abajo (no tenemos de la izquierda)
+Temp_Ambiente               = DataLoggerDataFrame["Canal 105-Canal_105_Tambiente_[ºC] "].astype("float64")
+Temp_CelulaCalibrada_Arriba = DataLoggerDataFrame["Canal 308-Canal_308_TG2_arriba_[ºC] "].astype("float64")
+Temp_CelulaCalibrada_Abajo  = DataLoggerDataFrame["Canal 307-Canal_307_TG1_abajo_[ºC] "].astype("float64")
 
 
 """
@@ -635,6 +642,10 @@ referencia la serie.
 """
 
 
+# Reorganizamos y estructuramos los datos por tipo de panel solar creando 3 DataFrames separados.
+# Con .set_index('Datetime', inplace=True) usamos las fechas como índice, convirtiendo cada DataFrame en una serie temporal.
+# Esto nos permite analizar de forma independiente cada panel solar sin necesidad de cruzar DataFrames.
+
 Antracita = pd.DataFrame()
 Green     = pd.DataFrame()
 Terracota = pd.DataFrame()
@@ -658,9 +669,12 @@ Antracita["Corriente entrada (A) Antracita"]  = I_input_Antra
 Antracita["Potencia entrada (W) Antracita"]   = P_input_Antra
 Antracita["Potencia AC salida (W) Antracita"] = P_output_Antra
 Antracita["Piranometro Referencia"] = IrradianciaPiranometro
-Antracita["Piranometro Arriba"] = IrradianciaPiranometro_Arriba
-Antracita["Piranometro Abajo"] = IrradianciaPiranometro_Abajo
-Antracita["Piranometro Izquierda"] = IrradianciaPiranometro_Izquierda
+Antracita["Celula Calibrada Arriba"] = IrradianciaCelulaCalibrada_Arriba
+Antracita["Celula Calibrada Abajo"] = IrradianciaCelulaCalibrada_Abajo
+Antracita["Celula Calibrada Izquierda"] = IrradianciaCelulaCalibrada_Izquierda
+Antracita["Temp (C) Celula Calibrada Arriba"] = Temp_CelulaCalibrada_Arriba
+Antracita["Temp (C) Celula Calibrada Abajo"] = Temp_CelulaCalibrada_Abajo
+Antracita["Temp (C) Ambiente"] = Temp_Ambiente
 Antracita.set_index('Datetime', inplace=True)
 
 Green["Datetime"] = Date
@@ -681,9 +695,12 @@ Green["Corriente entrada (A) Green"]  = I_input_Green
 Green["Potencia entrada (W) Green"]   = P_input_Green
 Green["Potencia AC salida (W) Green"] = P_output_Green
 Green["Piranometro Referencia"] = IrradianciaPiranometro
-Green["Piranometro Arriba"] = IrradianciaPiranometro_Arriba
-Green["Piranometro Abajo"] = IrradianciaPiranometro_Abajo
-Green["Piranometro Izquierda"] = IrradianciaPiranometro_Izquierda
+Green["Celula Calibrada Arriba"] = IrradianciaCelulaCalibrada_Arriba
+Green["Celula Calibrada Abajo"] = IrradianciaCelulaCalibrada_Abajo
+Green["Celula Calibrada Izquierda"] = IrradianciaCelulaCalibrada_Izquierda
+Green["Temp (C) Celula Calibrada Arriba"] = Temp_CelulaCalibrada_Arriba
+Green["Temp (C) Celula Calibrada Abajo"] = Temp_CelulaCalibrada_Abajo
+Green["Temp (C) Ambiente"] = Temp_Ambiente
 Green.set_index('Datetime', inplace=True)
 
 
@@ -705,11 +722,17 @@ Terracota["Corriente entrada (A) Terracota"]  = I_input_Terra
 Terracota["Potencia entrada (W) Terracota"]   = P_input_Terra
 Terracota["Potencia AC salida (W) Terracota"] = P_output_Terra
 Terracota["Piranometro Referencia"] = IrradianciaPiranometro
-Terracota["Piranometro Arriba"] = IrradianciaPiranometro_Arriba
-Terracota["Piranometro Abajo"] = IrradianciaPiranometro_Abajo
-Terracota["Piranometro Izquierda"] = IrradianciaPiranometro_Izquierda
+Terracota["Celula Calibrada Arriba"] = IrradianciaCelulaCalibrada_Arriba
+Terracota["Celula Calibrada Abajo"] = IrradianciaCelulaCalibrada_Abajo
+Terracota["Celula Calibrada Izquierda"] = IrradianciaCelulaCalibrada_Izquierda
+Terracota["Temp (C) Celula Calibrada Arriba"] = Temp_CelulaCalibrada_Arriba
+Terracota["Temp (C) Celula Calibrada Abajo"] = Temp_CelulaCalibrada_Abajo
+Terracota["Temp (C) Ambiente"] = Temp_Ambiente
 Terracota.set_index('Datetime', inplace=True)
 
 
 
+# Informamos de que el paso de las representaciones ha terminado
+print(f"[INFO] Todas las figuras representadas")
+print("-" * 50)
 # %%
