@@ -130,6 +130,52 @@ fig_T_amb.autofmt_xdate()
 fig_T_amb.tight_layout()
 fig_T_amb.show()
 
+
+""" 
+### HISTOGRAMA DE TEMPERATURA AMBIENTE (lo comentamos por el momento, no es necesario que salga siempre)
+
+# Estadísticas básicas de la temperatura ambiente
+print("Estadísticas de temperatura ambiente:")
+col_T_amb = DataFrame_Temp_Ambiente.columns[0]
+stats_T_amb = DataFrame_Temp_Ambiente.describe()
+print(stats_T_amb)
+
+# Plot del histograma de temperaturas
+fig_hist_T_amb = plt.figure(figsize=(12, 4))
+fig_hist_T_amb.canvas.manager.set_window_title('Histograma Temperatura Ambiente')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_hist_T_amb = fig_hist_T_amb.add_subplot(111)
+titulo_hist_T_amb = f'Histograma de Temperatura Ambiente ({DataFrame_Temp_Ambiente.index[0]} — {DataFrame_Temp_Ambiente.index[-1]})'
+ax_hist_T_amb.set_title(titulo_hist_T_amb, fontsize=12, fontweight='normal')
+
+ax_hist_T_amb.hist(DataFrame_Temp_Ambiente, bins=100, histtype='bar', alpha=0.9, color='tomato', edgecolor='black', label= "Temperatura ambiente ")
+
+ax_hist_T_amb.set_xlim(-10, 40)
+
+ax_hist_T_amb.set_xlabel('Temperatura ambiente (ºC)')
+ax_hist_T_amb.set_ylabel('Número de medidas')
+ax_hist_T_amb.legend(loc='best')
+ax_hist_T_amb.grid(True, alpha=0.7)
+
+str_estadisticas = '\n'.join((
+    f'Media: {stats_T_amb.loc["mean", col_T_amb]:.2f} ºC',
+    f'STD: {stats_T_amb.loc["std", col_T_amb]:.2f} ºC',
+    f'Máx: {stats_T_amb.loc["max", col_T_amb]:.2f} ºC',
+    f'Mín: {stats_T_amb.loc["min", col_T_amb]:.2f} ºC'
+))
+
+ax_hist_T_amb.text(0.05, 0.95, str_estadisticas, horizontalalignment='left',
+    verticalalignment='top', transform=ax_hist_T_amb.transAxes, 
+    bbox=dict(boxstyle='round', facecolor='whitesmoke', alpha=0.8))
+
+
+fig_hist_T_amb.tight_layout()
+fig_hist_T_amb.show()
+
+"""
+
+
 """
     Definimos la función combine_series_list para arreglar cualquier fallo en los sensores de temperatura. 
     Por ejemplo, si falla el sensor de la célula 1, asumimos que la célula 2 tiene la misma temperatura y completamos el dato faltante 
