@@ -32,16 +32,25 @@ def filtro_irradiancias_400(df):
     # Creamos una copia del DataFrame original y añadimos la columna 'filtrar' para determinar qué datos concretos
     # deben ser filtradas en el filtro general (filtro_Ross)
     df_filtrado = df.copy()
-    df_filtrado['filtrar'] = False
 
-    Irradiancias_Cel_Calib_400 = [col for col in df_filtrado.columns if 'Celula Calibrada Arriba' in col]
+    if 'filtrar' not in df_filtrado.columns:
+        df_filtrado['filtrar'] = False
 
+    # Búsqueda exacta de la columna, para que no coja también las columnas de temperatura de las células calibradas
+    Irradiancias_Cel_Calib_400 = [col for col in df_filtrado.columns if col == 'Celula Calibrada Arriba']
+        
+    umbral_irradiancia_min = 400  # W/m2
+    
     for panel in Irradiancias_Cel_Calib_400:
 
-        umbral_irradiancia_min = 400 # W/m2
-
-        # marcamos como 'filtrar' = True las filas con irradiancias menores a este valor
-        df_filtrado.loc[df_filtrado[panel] < umbral_irradiancia_min , 'filtrar'] = True
+        # Contar valores antes del filtro
+        valores_validos_antes = df_filtrado[panel].notna().sum()
+        valores_bajos = (df_filtrado[panel] < umbral_irradiancia_min).sum()
+        
+        print(f"[DEBUG] {panel}: {valores_validos_antes} valores pasan el filtro, {valores_bajos} por debajo de {umbral_irradiancia_min} W/m2")
+        
+        # Marcar para filtrar las filas con irradiancias bajas (incluyendo NaN de forma segura)
+        df_filtrado.loc[(df_filtrado[panel] < umbral_irradiancia_min) | df_filtrado[panel].isna(), 'filtrar'] = True
 
     return df_filtrado
 
@@ -69,12 +78,16 @@ def filtro_ambiente(df):
 
     for panel in temperaturas:
 
-        temp_muy_baja = df_filtrado[panel] < -10  
-        temp_muy_alta = df_filtrado[panel] > 60 
+        temp_muy_baja = df_filtrado[panel] < -10
+        temp_muy_alta = df_filtrado[panel] > 50
         
         df_filtrado.loc[temp_muy_baja | temp_muy_alta, 'filtrar'] = True
 
-    # TODO: Comprobar visualmente esto, a donde tiran normalmente las temperaturas ambiente
+            # Datos del 29 de noviembre de 2024 hasta el 3 de junio de 2025:
+                # Media: 12.86 ºC
+                # STD: 7.01 ºC
+                # Max: 37.77 ºC
+                # Min: -6.99 ºC
 
     return df_filtrado
 
@@ -89,10 +102,8 @@ def filtro_modelo_Ross(df, name):
     # mas cosas
 
     #df_filtrado.loc[df_filtrado["filtrar"] == True, :] = np.nan
-    """
-    darle una vuelta a este filtro, está dando muchos problemas
-    """
-    # df_filtrado = df_filtrado[~df_filtrado["filtrar"]].drop(columns=["filtrar"])
+
+    df_filtrado = df_filtrado[~df_filtrado["filtrar"]].drop(columns=["filtrar"])
     
     # con df_filtrado[~df_filtrado["filtrar"]], solo conservamos las filas donde ~filtrar = True (~ es operador NOT)
     # Es decir, nos quedamos con las filas donde filtrar = False (las medidas que son buenas)
@@ -102,9 +113,9 @@ def filtro_modelo_Ross(df, name):
 
 ##### FILTRADO PARA CADA TIPO DE TECNOLOGÍA DE PANELES SOLARES EN EL TEJADO #####
 
-Antracita_filtered_Ross = filtro_modelo_Ross(Antracita, "Antracita")
-Green_filtered_Ross     = filtro_modelo_Ross(Green, "Green")
-Terracota_filtered_Ross = filtro_modelo_Ross(Terracota, "Terracota")
+Antracita_filtered_Ross = filtro_modelo_Ross(Antracita_filtered, "Antracita")
+Green_filtered_Ross     = filtro_modelo_Ross(Green_filtered, "Green")
+Terracota_filtered_Ross = filtro_modelo_Ross(Terracota_filtered, "Terracota")
 
 # Informamos de los filtros del Modelo de Ross
 print(f"[INFO] Filtros del modelo de Ross aplicados")
@@ -196,6 +207,7 @@ def modelo_Ross(df, tipo_celula, irradiancia_col="Celula Calibrada Arriba"):
     return resultados
 
 
+# Función para simular la temperatura de la célula en cada instante con el NOCT calculado en modelo_Ross
 def simular_temperatura_celula(G_cel_arriba, T_ambiente, NOCT):
     '''
     Parámetros:
@@ -226,12 +238,18 @@ def mean_bias_error(T_cell_real, T_cell_sim):
     '''
 
     T_cell_real = np.array(T_cell_real)
-    T_cell_sim = np.array(T_cell_sim)
+    T_cell_sim  = np.array(T_cell_sim)
 
+    # reshape devuelve un array 2D, de forma que sea un número len(T_cell) de arrays con 1 elemento cada uno
+    # Quedando de esta forma:
+    # [[ 1]
+    # [ 2]
+    # (...)
+    #  [12]]
     T_cell_real = T_cell_real.reshape(len(T_cell_real),1)
-    T_cell_sim = T_cell_sim.reshape(len(T_cell_sim),1)
+    T_cell_sim  = T_cell_sim.reshape(len(T_cell_sim),1)
 
-    diff = (T_cell_real-T_cell_sim)
+    diff = (T_cell_real - T_cell_sim)
     mbe = diff.mean()
 
     return mbe
@@ -249,3 +267,4 @@ resultados_terracota = modelo_Ross(Terracota_filtered_Ross, "Terracota")
 # TODO: Representar gráficamente todo
 # TODO: Mejorar presentación del output en la terminal
 #### Una de las green da un NOCT mas bajo que las demás porque está mucho más ventilada??
+# %%
