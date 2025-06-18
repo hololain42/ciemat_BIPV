@@ -79,6 +79,57 @@ fig_Gpyr.tight_layout()
 fig_Gpyr.show()
 
 
+DataFrame_IrradianciaCelulaCalibrada_Arriba = pd.concat([Date,IrradianciaCelulaCalibrada_Arriba], axis=1)
+DataFrame_IrradianciaCelulaCalibrada_Arriba.set_index("Date_local", inplace=True)
+
+# Ploteamos la irradiancia de la célula calibrada de arriba
+fig_G_arriba = plt.figure(figsize=(12, 8))
+fig_G_arriba.canvas.manager.set_window_title('Irradiancia Célula Calibrada Arriba')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_G_arriba = fig_G_arriba.add_subplot(111)
+ax_G_arriba.set_title('Irradiancia de la célula calibrada de arriba', fontsize=12, fontweight='normal')
+
+ax_G_arriba.plot(Date[:DataLength], IrradianciaCelulaCalibrada_Arriba[:DataLength], linewidth=1.5, label= "Irradiancia célula ")
+
+ax_G_arriba.set_xlabel('Fecha')
+ax_G_arriba.set_ylabel('Irradiancia ($W/m^{2}$)')
+ax_G_arriba.legend(loc='best')
+ax_G_arriba.grid(True, alpha=0.7)
+
+ax_G_arriba.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_G_arriba.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_G_arriba.autofmt_xdate() 
+
+fig_G_arriba.tight_layout()
+fig_G_arriba.show()
+
+
+DataFrame_Temp_Ambiente = pd.concat([Date,Temp_Ambiente], axis=1)
+DataFrame_Temp_Ambiente.set_index("Date_local", inplace=True)
+
+# Ploteamos la temperatura ambiente
+fig_T_amb = plt.figure(figsize=(12, 8))
+fig_T_amb.canvas.manager.set_window_title('Temperatura Ambiente')
+
+# Definimos objeto ax para distinguir entre figuras
+ax_T_amb = fig_T_amb.add_subplot(111)
+ax_T_amb.set_title('Temperatura Ambiente', fontsize=12, fontweight='normal')
+
+ax_T_amb.plot(Date[:DataLength], Temp_Ambiente[:DataLength], linewidth=1.5, label= "Temperatura ambiente ")
+
+ax_T_amb.set_xlabel('Fecha')
+ax_T_amb.set_ylabel('Temperatura ambiente (ºC)')
+ax_T_amb.legend(loc='best')
+ax_T_amb.grid(True, alpha=0.7)
+
+ax_T_amb.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+ax_T_amb.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
+fig_T_amb.autofmt_xdate() 
+
+fig_T_amb.tight_layout()
+fig_T_amb.show()
+
 """
     Definimos la función combine_series_list para arreglar cualquier fallo en los sensores de temperatura. 
     Por ejemplo, si falla el sensor de la célula 1, asumimos que la célula 2 tiene la misma temperatura y completamos el dato faltante 
@@ -627,6 +678,25 @@ fig_P_output_microinversor.show()
 
 
 
+# Impedimos que las figuras se cierren automáticamente tras crearse
+plt.show(block=False)
+
+# Informamos de que el paso de las representaciones ha terminado
+print(f"[INFO] Todas las figuras representadas")
+print("-" * 50)
+
+# Pregunta si continuar con la ejecución del programa (no puede continuar si las figuras siguen abiertas)
+respuesta = input("¿Continuar con las figuras cerradas? (s/n): ").lower().strip()
+
+if respuesta in ['s', 'si', 'sí', 'y', 'yes']:
+    plt.close('all')  # Cierra todas las figuras
+    print(f"[INFO] Figuras cerradas. Continuando con la ejecución del programa...")
+    print("-" * 50)
+else:
+    print("[INFO] Mantenemos las figuras abiertas. Continuamos la ejecución del programa...")
+    print("-" * 50)
+
+
 """
 Hasta ahora se han importado datos que, en su pequeña minoría, han sido intercambiados
 de canal (Caso de algunos voltajes de entrada, potencias de entrada al inversor), esto
@@ -676,6 +746,7 @@ Antracita["Temp (C) Celula Calibrada Arriba"] = Temp_CelulaCalibrada_Arriba
 Antracita["Temp (C) Celula Calibrada Abajo"] = Temp_CelulaCalibrada_Abajo
 Antracita["Temp (C) Ambiente"] = Temp_Ambiente
 Antracita.set_index('Datetime', inplace=True)
+
 
 Green["Datetime"] = Date
 Green["Vm 1 (V) Green"] = Vm_Green_1
@@ -732,7 +803,4 @@ Terracota.set_index('Datetime', inplace=True)
 
 
 
-# Informamos de que el paso de las representaciones ha terminado
-print(f"[INFO] Todas las figuras representadas")
-print("-" * 50)
 # %%
