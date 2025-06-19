@@ -187,7 +187,7 @@ def modelo_Ross(df, tipo_celula, irradiancia_col="Celula Calibrada Arriba"):
             'NOCT_eff': NOCT_eff,
             'R2': r2,
             'pendiente': pendiente,
-            'intercepto': ordenada_origen,
+            'intercept_0': ordenada_origen,
             'ecuacion': ecuacion_ross
         }
         
@@ -211,12 +211,12 @@ def modelo_Ross(df, tipo_celula, irradiancia_col="Celula Calibrada Arriba"):
 def simular_temperatura_celula(G_cel_arriba, T_ambiente, NOCT):
     '''
     Parámetros:
-        T_ambiente (array): Array de las temperaturas ambiente medidas experimentalmente
-        G_cel_arriba (array): Array de la irradiancia de la célula de arriba (ya filtrada)
-        NOCT (float): Valor del NOCT calculado con la función modelo_Ross
+        G_cel_arriba (numeric): Serie de pandas de la irradiancia de la célula de arriba (ya filtrada)
+        T_ambiente (numeric): Serie de pandas de las temperaturas ambiente medidas experimentalmente
+        NOCT (numeric): Valor del NOCT calculado con la función modelo_Ross
 
     Devuelve:
-        T_cell_sim (array): Valor de la temperatura de la célula simulada para cada instante
+        T_cell_sim (numeric): Serie de pandas de la temperatura de la célula simulada para cada instante
     '''
     # Según la documentación de pvlib, "This function expects irradiance in W/m2", aunque luego la convierte a mW/cm2
     # Por tanto no cambiaré nada de G_cell_arriba
@@ -230,24 +230,12 @@ def simular_temperatura_celula(G_cel_arriba, T_ambiente, NOCT):
 def mean_bias_error(T_cell_real, T_cell_sim):
     '''
     Parámetros:
-        T_cell_real (array): Array de las temperaturas medidas experimentalmente
-        T_cell_sim (array): Array de los valores simulados con el NOCT calculado
+        T_cell_real (numeric): Serie de pandas de las temperaturas medidas experimentalmente
+        T_cell_sim (numeric): Serie de pandas de los valores simulados con el NOCT calculado
 
     Devuelve:
         mbe (float): mean bias error
     '''
-
-    T_cell_real = np.array(T_cell_real)
-    T_cell_sim  = np.array(T_cell_sim)
-
-    # reshape devuelve un array 2D, de forma que sea un número len(T_cell) de arrays con 1 elemento cada uno
-    # Quedando de esta forma:
-    # [[ 1]
-    # [ 2]
-    # (...)
-    #  [12]]
-    T_cell_real = T_cell_real.reshape(len(T_cell_real),1)
-    T_cell_sim  = T_cell_sim.reshape(len(T_cell_sim),1)
 
     diff = (T_cell_real - T_cell_sim)
     mbe = diff.mean()
@@ -257,14 +245,152 @@ def mean_bias_error(T_cell_real, T_cell_sim):
 
 ### RESULTADOS NOCT ###
 
-resultados_antracita = modelo_Ross(Antracita_filtered_Ross, "Antracita")
-resultados_green     = modelo_Ross(Green_filtered_Ross, "Green")
-resultados_terracota = modelo_Ross(Terracota_filtered_Ross, "Terracota")
+resultados_NOCT_Antracita = modelo_Ross(Antracita_filtered_Ross, "Antracita")
+resultados_NOCT_Green     = modelo_Ross(Green_filtered_Ross, "Green")
+resultados_NOCT_Terracota = modelo_Ross(Terracota_filtered_Ross, "Terracota")
 
+
+### Temperaturas simuladas con el NOCT y MBE ###
+
+# IMPORTANTE: Calculamos empleando los DataFrames filtered, no filtered_Ross
+# De esta forma, validamos el modelo contra todos los datos, no solo los que tengan G>400 W/m2
+# (que a priori son los que mejor deberían funcionar)
+
+
+    #################
+    ### ANTRACITA ###
+    #################
+
+mbe_Antracita = {}
+
+for i in range(1, 5):
+
+    # Nombre de la columna de la temperatura de la célula experimental
+    temp_celula_col = f"Temp {i} (C) Antracita"
+
+    # Nombre de la columna de la temperatura de la célula simulada con el NOCT obtenido
+    temp_sim_celula_col = f"Temp_Sim {i} (C) Antracita"
+
+    # Nombre de la columna Delta_T (T_cell_real-T_cell_sim) de la célula
+    delta_temp_celula_col = f"Delta_T Celula {i} (C) Antracita"
+
+    # Aplicamos la función para simular la temperatura de la célula con el NOCT obtenido
+    # y guardamos el resultado en una columna específica
+    Antracita_filtered[temp_sim_celula_col] = simular_temperatura_celula(
+        Antracita_filtered['Celula Calibrada Arriba'],
+        Antracita_filtered['Temp (C) Ambiente'],
+        resultados_NOCT_Antracita[f'Celula_{i}']['NOCT_eff']
+    )
+
+    # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
+    Antracita_filtered[delta_temp_celula_col] = Antracita_filtered[temp_celula_col] - Antracita_filtered[temp_sim_celula_col]
+
+    # Calculamos el Mean Bias Error de esa columna (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
+    mbe_Antracita[f"Celula_{i}"] = {
+        'MBE': mean_bias_error(Antracita_filtered[temp_celula_col], Antracita_filtered[temp_sim_celula_col])
+    }
+
+print("-" * 50)
+print("MBE-ANTRACITA")
+for celula, resultado in mbe_Antracita.items():
+
+    numero_celula = celula.split('_')[1]
+
+    print(f"- Célula {numero_celula}:")
+    print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
+
+
+    #################
+    ###   GREEN   ###
+    #################
+
+mbe_Green = {}
+
+for i in range(1, 5):
+
+    # Nombre de la columna de la temperatura de la célula experimental
+    temp_celula_col = f"Temp {i} (C) Green"
+
+    # Nombre de la columna de la temperatura de la célula simulada con el NOCT obtenido
+    temp_sim_celula_col = f"Temp_Sim {i} (C) Green"
+
+    # Nombre de la columna Delta_T (T_cell_real-T_cell_sim) de la célula
+    delta_temp_celula_col = f"Delta_T Celula {i} (C) Green"
+
+    # Aplicamos la función para simular la temperatura de la célula con el NOCT obtenido
+    # y guardamos el resultado en una columna específica
+    Green_filtered[temp_sim_celula_col] = simular_temperatura_celula(
+        Green_filtered['Celula Calibrada Arriba'],
+        Green_filtered['Temp (C) Ambiente'],
+        resultados_NOCT_Green[f'Celula_{i}']['NOCT_eff']
+    )
+
+    # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
+    Green_filtered[delta_temp_celula_col] = Green_filtered[temp_celula_col] - Green_filtered[temp_sim_celula_col]
+
+    # Calculamos el Mean Bias Error de esa columna (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
+    mbe_Green[f"Celula_{i}"] = {
+        'MBE': mean_bias_error(Green_filtered[temp_celula_col], Green_filtered[temp_sim_celula_col])
+    }
+
+print("-" * 50)
+print("MBE-GREEN")
+for celula, resultado in mbe_Green.items():
+
+    numero_celula = celula.split('_')[1]
+
+    print(f"- Célula {numero_celula}:")
+    print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
+
+
+    #################
+    ### TERRACOTA ###
+    #################
+
+mbe_Terracota = {}
+
+for i in range(1, 5):
+
+    # Nombre de la columna de la temperatura de la célula experimental
+    temp_celula_col = f"Temp {i} (C) Terracota"
+
+    # Nombre de la columna de la temperatura de la célula simulada con el NOCT obtenido
+    temp_sim_celula_col = f"Temp_Sim {i} (C) Terracota"
+
+    # Nombre de la columna Delta_T (T_cell_real-T_cell_sim) de la célula
+    delta_temp_celula_col = f"Delta_T Celula {i} (C) Terracota"
+
+    # Aplicamos la función para simular la temperatura de la célula con el NOCT obtenido
+    # y guardamos el resultado en una columna específica
+    Terracota_filtered[temp_sim_celula_col] = simular_temperatura_celula(
+        Terracota_filtered['Celula Calibrada Arriba'],
+        Terracota_filtered['Temp (C) Ambiente'],
+        resultados_NOCT_Terracota[f'Celula_{i}']['NOCT_eff']
+    )
+
+    # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
+    Terracota_filtered[delta_temp_celula_col] = Terracota_filtered[temp_celula_col] - Terracota_filtered[temp_sim_celula_col]
+
+    # Calculamos el Mean Bias Error de esa columna (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
+    mbe_Terracota[f"Celula_{i}"] = {
+        'MBE': mean_bias_error(Terracota_filtered[temp_celula_col], Terracota_filtered[temp_sim_celula_col])
+    }
+
+print("-" * 50)
+print("MBE-TERRACOTA")
+for celula, resultado in mbe_Terracota.items():
+
+    numero_celula = celula.split('_')[1]
+
+    print(f"- Célula {numero_celula}:")
+    print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
+
+
+# TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?
+# TODO: hay mucha diferencia (delta T grande) pronto por la mañana... ¿por qué? representar Delta T para ver esto
 # TODO: Mirar como de desplazados entre sí están los valores obtenidos para cada tipo de célula (ver como el desplazamiento entre sí)
-# TODO: Usar los datos del submuestreo? O usar los datos normales?
 # TODO: Añadir un elapsed time y un dato final de cuántos archivos se han analizado
-# TODO: Representar gráficamente todo
+# TODO: Representar gráficamente todo (también el Delta_T, para ver cuanto es más diferente y cuando se parece más a lo largo de los meses y las horas)
 # TODO: Mejorar presentación del output en la terminal
 #### Una de las green da un NOCT mas bajo que las demás porque está mucho más ventilada??
 # %%
