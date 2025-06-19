@@ -1,6 +1,7 @@
 #%%
 
 from Data import *
+import threading
 
 # Intervalo de tiempo para la gráfica (en horas)
 TickInterval = 15
@@ -723,19 +724,44 @@ fig_P_output_microinversor.tight_layout()
 fig_P_output_microinversor.show()
 
 
+def input_with_timeout_threading(prompt, timeout=40):
+    
+    result = [None]
+    
+    def get_input():
+        try:
+            result[0] = input(prompt)
+        except:
+            pass
+    
+    thread = threading.Thread(target=get_input)
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout)
+    
+    if thread.is_alive():
+        return None  # Timeout
+    return result[0]
+
 
 # Impedimos que las figuras se cierren automáticamente tras crearse
 plt.show(block=False)
 
 # Informamos de que el paso de las representaciones ha terminado
+print("-" * 50)
 print(f"[INFO] Todas las figuras representadas")
 print("-" * 50)
 
 # Pregunta si continuar con la ejecución del programa (no puede continuar si las figuras siguen abiertas)
-respuesta = input("¿Continuar con las figuras cerradas? (s/n): ").lower().strip()
+# Damos 15 segundos para responder, si no continuamos con las 
+respuesta = input_with_timeout_threading("¿Continuar con las figuras cerradas? (s/n) [40s]: ", 40)
 
-if respuesta in ['s', 'si', 'sí', 'y', 'yes']:
-    plt.close('all')  # Cierra todas las figuras
+if respuesta is None:
+    plt.close('all')
+    print(f"\n[INFO] Tiempo de respuesta agotado (40s). Cerramos figuras y continuamos automáticamente...")
+    print("-" * 50)
+elif respuesta.lower().strip() in ['s', 'si', 'sí', 'y', 'yes']:
+    plt.close('all')
     print(f"[INFO] Figuras cerradas. Continuando con la ejecución del programa...")
     print("-" * 50)
 else:

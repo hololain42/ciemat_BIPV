@@ -1,4 +1,6 @@
 #%%
+from datetime import datetime
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -7,6 +9,29 @@ import os
 import chardet
 
 #%%
+
+# Función para trackear el tiempo que tarda en ejecutar el programa (basta con poner mostrar_tiempo_total() al final del último archivo .py que se ejecuta)
+tiempo_inicio = time.time()
+
+print("-" * 50)
+print(f"[INFO] Iniciando a las {datetime.now().strftime('%H:%M:%S')}")
+
+def mostrar_tiempo_total():
+    
+    tiempo_total = time.time() - tiempo_inicio
+    
+    if tiempo_total < 60:
+        print(f"[INFO] Tiempo total de ejecución: {tiempo_total:.2f} segundos")
+    elif tiempo_total < 3600:
+        minutos = int(tiempo_total // 60)
+        segundos = tiempo_total % 60
+        print(f"[INFO] Tiempo total de ejecución: {minutos}m {segundos:.1f}s ({tiempo_total:.2f}s)")
+    else:
+        horas = int(tiempo_total // 3600)
+        minutos = int((tiempo_total % 3600) // 60)
+        segundos = tiempo_total % 60
+        print(f"[INFO] Tiempo total de ejecución: {horas}h {minutos}m {segundos:.1f}s")
+
 
 ##### IMPORT DATA SECTION #####
 
@@ -72,7 +97,6 @@ num_arch = len(Dataloggerfiles)
 print("-" * 50)
 print(f"Total de archivos del Datalogger a analizar: {num_arch}")
 print(f"->Datos del " + Dataloggerfiles[1].split("_DAQ970A_Colores")[0] + " al " + Dataloggerfiles[-1].split("_DAQ970A_Colores")[0])
-print("-" * 50)
 
 # Loggear la primera aparición del canal 220 (Potencia AC Inversor Huawei)
 primer_canal_220 = None
@@ -81,6 +105,7 @@ fallo_lectura_arch = []
 # Contador de iteraciones
 iter = 0
 
+print("-" * 50)
 print(f"[INFO] Comienza el procesado de archivos:")
 for i in Dataloggerfiles[180:]:
 
@@ -144,25 +169,23 @@ print("-" * 50)
 print(f"Procesamiento del header completado! {iter} archivos en total.")
 print(f"DataFrame creado: {DataLoggerDataFrame.shape[0]} filas x {DataLoggerDataFrame.shape[1]} columnas")
 # El DataFrame se forma rellenando filas en las 83 columnas que vienen del Datalogger, una detrás de otra, un día de medidas detrás de otro
-print("-" * 50)
 
 # Posible fallo de lectura en archivos
 if fallo_lectura_arch:
-    print(f"[ERROR] FALLO DE LECTURA EN {len(fallo_lectura_arch)} ARCHIVO(S):")
+    print("-" * 50)
+    print(f"[WARNING] FALLO DE LECTURA EN {len(fallo_lectura_arch)} ARCHIVO(S):")
     for archivo in fallo_lectura_arch:
         print(f"   - {archivo['nombre']}")
         print(f"     Tipo de error: {archivo['tipo_error']}")
         print(f"     Mensaje de error: {archivo['mensaje_error']}")
 else:
-    print(f"\n Todos los archivos se procesaron correctamente")
-print("-" * 50)
+    print(f"[INFO] Todos los archivos se procesaron correctamente")
 
 
 # Información canal 220
 if primer_canal_220 is not None:
+    print("-" * 50)
     print(f"[INFO] Primera aparición del canal 220 (Potencia AC Inversor Huawei): " + primer_canal_220)
-    print(f"   A partir de ese archivo ya se loggea la información del inversor.\n")
-print("-" * 50)
-
+    print(f"   A partir de ese archivo ya se loggea la información del inversor.")
 
 # %%

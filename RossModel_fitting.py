@@ -1,6 +1,5 @@
 #%%
 
-#from Filter import Antracita_filtered, Green_filtered, Terracota_filtered
 from Filter import *
 import numpy as np
 from datetime import time
@@ -118,8 +117,8 @@ Green_filtered_Ross     = filtro_modelo_Ross(Green_filtered, "Green")
 Terracota_filtered_Ross = filtro_modelo_Ross(Terracota_filtered, "Terracota")
 
 # Informamos de los filtros del Modelo de Ross
-print(f"[INFO] Filtros del modelo de Ross aplicados")
 print("-" * 50)
+print(f"[INFO] Filtros del modelo de Ross aplicados")
 
 ### TODA LA APLICACIÓN DEL MODELO DE ROSS A PARTIR DE AQUÍ ###
 
@@ -386,10 +385,11 @@ for celula, resultado in mbe_Terracota.items():
     print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
 
 
+mostrar_tiempo_total()
+
 # TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?
 # TODO: hay mucha diferencia (delta T grande) pronto por la mañana... ¿por qué? representar Delta T para ver esto
 # TODO: Mirar como de desplazados entre sí están los valores obtenidos para cada tipo de célula (ver como el desplazamiento entre sí)
-# TODO: Añadir un elapsed time y un dato final de cuántos archivos se han analizado
 # TODO: Representar gráficamente todo (también el Delta_T, para ver cuanto es más diferente y cuando se parece más a lo largo de los meses y las horas)
 # TODO: Mejorar presentación del output en la terminal
 #### Una de las green da un NOCT mas bajo que las demás porque está mucho más ventilada??
