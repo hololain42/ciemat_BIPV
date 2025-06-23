@@ -6,6 +6,7 @@ from datetime import time
 import pvlib
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
+from scipy import stats
 
 #%%
 
@@ -40,13 +41,16 @@ def filtro_irradiancias_400(df):
         
     umbral_irradiancia_min = 400  # W/m2
     
+    print("-" * 50)
+    print(f"[INFO] Filtro de irradiancia:")
+
     for panel in Irradiancias_Cel_Calib_400:
 
         # Contar valores antes del filtro
         valores_validos_antes = df_filtrado[panel].notna().sum()
         valores_bajos = (df_filtrado[panel] < umbral_irradiancia_min).sum()
         
-        print(f"[DEBUG] {panel}: {valores_validos_antes} valores pasan el filtro, {valores_bajos} por debajo de {umbral_irradiancia_min} W/m2")
+        print(f"    -[DEBUG] {panel}: De {valores_validos_antes} valores, solo {valores_validos_antes-valores_bajos} superan el umbral de {umbral_irradiancia_min} W/m2")
         
         # Marcar para filtrar las filas con irradiancias bajas (incluyendo NaN de forma segura)
         df_filtrado.loc[(df_filtrado[panel] < umbral_irradiancia_min) | df_filtrado[panel].isna(), 'filtrar'] = True
@@ -218,7 +222,7 @@ def simular_temperatura_celula(G_cel_arriba, T_ambiente, NOCT):
         T_cell_sim (numeric): Serie de pandas de la temperatura de la célula simulada para cada instante
     '''
     # Según la documentación de pvlib, "This function expects irradiance in W/m2", aunque luego la convierte a mW/cm2
-    # Por tanto no cambiaré nada de G_cell_arriba
+    # Por tanto, no cambiaré nada de G_cell_arriba
 
     T_cell_sim = pvlib.temperature.ross(G_cel_arriba, T_ambiente, NOCT)
 
@@ -383,6 +387,110 @@ for celula, resultado in mbe_Terracota.items():
 
     print(f"- Célula {numero_celula}:")
     print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
+
+
+
+# Plots comparación temperaturas
+fig_T_comp = plt.figure(figsize=(10, 6))
+fig_T_comp.canvas.manager.set_window_title('Comparacion T simulada y real')
+plt.ioff()  # Use non-interactive mode.
+
+# Definimos objeto ax para distinguir entre figuras
+ax_T_comp = fig_T_comp.add_subplot(111)
+ax_T_comp.set_title("Comparación entre la temperatura simulada con NOCT y la experimental", fontsize=12, fontweight='normal')
+
+# ANTRACITA
+ax_T_comp.plot(Antracita_filtered["Temp 1 (C) Antracita"], Antracita_filtered["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Antracita", color= "xkcd:charcoal grey")
+ax_T_comp.plot(Antracita_filtered["Temp 2 (C) Antracita"], Antracita_filtered["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+ax_T_comp.plot(Antracita_filtered["Temp 3 (C) Antracita"], Antracita_filtered["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+ax_T_comp.plot(Antracita_filtered["Temp 4 (C) Antracita"], Antracita_filtered["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+
+# ANTRACITA - Regresión lineal
+# Concatenar todos los datos de Antracita
+x_ant = np.concatenate([Antracita_filtered["Temp 1 (C) Antracita"], 
+                        Antracita_filtered["Temp 2 (C) Antracita"],
+                        Antracita_filtered["Temp 3 (C) Antracita"],
+                        Antracita_filtered["Temp 4 (C) Antracita"]])
+y_ant = np.concatenate([Antracita_filtered["Temp_Sim 1 (C) Antracita"],
+                        Antracita_filtered["Temp_Sim 2 (C) Antracita"],
+                        Antracita_filtered["Temp_Sim 3 (C) Antracita"],
+                        Antracita_filtered["Temp_Sim 4 (C) Antracita"]])
+
+# Calcular regresión
+slope_ant, intercept_ant, r_value_ant, p_value_ant, std_err_ant = stats.linregress(x_ant, y_ant)
+line_ant = slope_ant * x_ant + intercept_ant
+ax_T_comp.plot(x_ant, line_ant, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
+
+# GREEN
+ax_T_comp.plot(Green_filtered["Temp 1 (C) Green"], Green_filtered["Temp_Sim 1 (C) Green"], linestyle="", marker= ".", label= "Green", color= "xkcd:leaf green")
+ax_T_comp.plot(Green_filtered["Temp 2 (C) Green"], Green_filtered["Temp_Sim 2 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+ax_T_comp.plot(Green_filtered["Temp 3 (C) Green"], Green_filtered["Temp_Sim 3 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+ax_T_comp.plot(Green_filtered["Temp 4 (C) Green"], Green_filtered["Temp_Sim 4 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+
+# GREEN - Regresión lineal
+x_green = np.concatenate([Green_filtered["Temp 1 (C) Green"],
+                          Green_filtered["Temp 2 (C) Green"],
+                          Green_filtered["Temp 3 (C) Green"],
+                          Green_filtered["Temp 4 (C) Green"]])
+y_green = np.concatenate([Green_filtered["Temp_Sim 1 (C) Green"],
+                          Green_filtered["Temp_Sim 2 (C) Green"],
+                          Green_filtered["Temp_Sim 3 (C) Green"],
+                          Green_filtered["Temp_Sim 4 (C) Green"]])
+
+slope_green, intercept_green, r_value_green, p_value_green, std_err_green = stats.linregress(x_green, y_green)
+line_green = slope_green * x_green + intercept_green
+ax_T_comp.plot(x_green, line_green, color="xkcd:irish green", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
+
+# TERRACOTA
+ax_T_comp.plot(Terracota_filtered["Temp 1 (C) Terracota"], Terracota_filtered["Temp_Sim 1 (C) Terracota"], linestyle="", marker= ".", label= "Terracota", color= "xkcd:terracotta")
+ax_T_comp.plot(Terracota_filtered["Temp 2 (C) Terracota"], Terracota_filtered["Temp_Sim 2 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+ax_T_comp.plot(Terracota_filtered["Temp 3 (C) Terracota"], Terracota_filtered["Temp_Sim 3 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+ax_T_comp.plot(Terracota_filtered["Temp 4 (C) Terracota"], Terracota_filtered["Temp_Sim 4 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+
+# TERRACOTA - Regresión lineal
+x_terra = np.concatenate([Terracota_filtered["Temp 1 (C) Terracota"],
+                          Terracota_filtered["Temp 2 (C) Terracota"],
+                          Terracota_filtered["Temp 3 (C) Terracota"],
+                          Terracota_filtered["Temp 4 (C) Terracota"]])
+y_terra = np.concatenate([Terracota_filtered["Temp_Sim 1 (C) Terracota"],
+                          Terracota_filtered["Temp_Sim 2 (C) Terracota"],
+                          Terracota_filtered["Temp_Sim 3 (C) Terracota"],
+                          Terracota_filtered["Temp_Sim 4 (C) Terracota"]])
+
+slope_terra, intercept_terra, r_value_terra, p_value_terra, std_err_terra = stats.linregress(x_terra, y_terra)
+line_terra = slope_terra * x_terra + intercept_terra
+ax_T_comp.plot(x_terra, line_terra, color="xkcd:tangerine", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
+
+
+ax_T_comp.set_xlabel('Temperatura experimental (C)')
+ax_T_comp.set_ylabel('Temperatura simulada (C)')
+ax_T_comp.legend(loc='best')
+ax_T_comp.grid(True, alpha=0.7)
+
+fig_T_comp.tight_layout()
+fig_T_comp.show()
+#plt.savefig('fig_T_comp.pdf')
+
+
+# Verificar si hay NaN o infinitos en tus datos
+print("=== DIAGNÓSTICO DE DATOS ===")
+print(f"Antracita - NaN en x: {np.isnan(x_ant).sum()}, NaN en y: {np.isnan(y_ant).sum()}")
+print(f"Antracita - Inf en x: {np.isinf(x_ant).sum()}, Inf en y: {np.isinf(y_ant).sum()}")
+print(f"Antracita - Total puntos: {len(x_ant)}")
+
+print(f"Green - NaN en x: {np.isnan(x_green).sum()}, NaN en y: {np.isnan(y_green).sum()}")
+print(f"Green - Inf en x: {np.isinf(x_green).sum()}, Inf en y: {np.isinf(y_green).sum()}")
+print(f"Green - Total puntos: {len(x_green)}")
+
+print(f"Terracota - NaN en x: {np.isnan(x_terra).sum()}, Inf en y: {np.isinf(y_terra).sum()}")
+print(f"Terracota - Inf en x: {np.isinf(x_terra).sum()}, Inf en y: {np.isinf(y_terra).sum()}")
+print(f"Terracota - Total puntos: {len(x_terra)}")
+
+
+# Imprimir estadísticas de las regresiones
+print(f"Antracita: R² = {r_value_ant**2:.3f}, pendiente = {slope_ant:.3f}")
+print(f"Green: R² = {r_value_green**2:.3f}, pendiente = {slope_green:.3f}")
+print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
 
 
 mostrar_tiempo_total()
