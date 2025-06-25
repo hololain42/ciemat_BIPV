@@ -91,12 +91,35 @@ registros que no tengan problemas en adelante.
 path = os.getcwd()
 Dataloggerfiles = os.listdir(path+"/Datos Datalogger/DAQ970A")
 
+# Por temas de caché, nos aseguramos de que se importen bien ordenados por fecha
+Dataloggerfiles = sorted(Dataloggerfiles, 
+                        key=lambda x: datetime.strptime("_".join(x.split("_")[:3]), "%Y_%m_%d"))
+
 DataLoggerDataFrame = pd.DataFrame()
+
+"""
+IMPORTANTE: El sistema no estuvo completamente operativo (en su versión "final", con todas las medidas ajustadas
+piranómetro de referencia, termómetro de temperatura ambiente...) hasta principios de diciembre.
+POR TANTO, vamos a coger datos desde el solsticio de invierno (21 de diciembre de 2024), ignorando todos los datos previos
+"""
 
 num_arch = len(Dataloggerfiles)
 print("-" * 50)
-print(f"Total de archivos del Datalogger a analizar: {num_arch}")
-print(f"->Datos del " + Dataloggerfiles[1].split("_DAQ970A_Colores")[0] + " al " + Dataloggerfiles[-1].split("_DAQ970A_Colores")[0])
+print(f"Total de archivos del Datalogger: {num_arch}")
+
+print(Dataloggerfiles[-1])
+fecha_solsticio = "2024_12_21"
+
+try:
+    num_arch_solsticio = next(i for i, archivo in enumerate(Dataloggerfiles) 
+                             if fecha_solsticio in archivo)
+    print(f"Índice del archivo correspondiente al solsticio: {num_arch_solsticio}")
+except StopIteration:
+    print(f"Archivo del {fecha_solsticio} no encontrado en el directorio")
+
+num_arch_analizables = num_arch - num_arch_solsticio
+print(f"Archivos desde el solsticio de invierno (21/12/24): {num_arch_analizables}")
+print(f"->Analizamos datos desde el " + Dataloggerfiles[num_arch_solsticio].split("_DAQ970A_Colores")[0] + " al " + Dataloggerfiles[-1].split("_DAQ970A_Colores")[0])
 
 # Loggear la primera aparición del canal 220 (Potencia AC Inversor Huawei)
 primer_canal_220 = None
@@ -107,7 +130,7 @@ iter = 0
 
 print("-" * 50)
 print(f"[INFO] Comienza el procesado de archivos:")
-for i in Dataloggerfiles[180:]:
+for i in Dataloggerfiles[num_arch_solsticio:]:
 
     try:
         # print(f"Abriendo archivo {i}")
@@ -152,7 +175,7 @@ for i in Dataloggerfiles[180:]:
         iter += 1
         # Mostrar progreso cada X archivos
         if (iter) % 30 == 0:  # Cada 30 archivos
-            print(f"Procesados {iter+1}/{num_arch} archivos.")
+            print(f"Procesados {iter+1}/{num_arch_analizables} archivos.")
     
     except Exception as e:
         print(f"ERROR procesando el archivo {i} - {type(e).__name__}")

@@ -5,3 +5,6 @@ Datos Datalogger/
 __pycache__/
 *.pyc
 *.pyo
+
+# Figuras varias (exportadas como .pdf)
+*.pdf
