@@ -235,20 +235,39 @@ def simular_temperatura_celula(G_cel_arriba, T_ambiente, NOCT):
 
 
 # Función para calcular el Mean Bias Error (MBE) entre los valores calculados de T_cell y los medidos realmente
-def mean_bias_error(T_cell_real, T_cell_sim):
+def mean_bias_error(T_cell_sim, T_cell_real):
     '''
     Parámetros:
-        T_cell_real (numeric): Serie de pandas de las temperaturas medidas experimentalmente
         T_cell_sim (numeric): Serie de pandas de los valores simulados con el NOCT calculado
+        T_cell_real (numeric): Serie de pandas de las temperaturas medidas experimentalmente
 
     Devuelve:
         mbe (float): mean bias error
     '''
 
-    diff = (T_cell_real - T_cell_sim)
+    # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
+    diff = (T_cell_sim - T_cell_real)
     mbe = diff.mean()
 
     return mbe
+
+
+# Función para calcular el Mean Absolute Error (MAE) entre los valores calculados de T_cell y los medidos realmente
+def mean_absolute_error(T_cell_sim, T_cell_real):
+    '''
+    Parámetros:
+        T_cell_sim (numeric): Serie de pandas de los valores simulados con el NOCT calculado
+        T_cell_real (numeric): Serie de pandas de las temperaturas medidas experimentalmente
+
+    Devuelve:
+        mae (float): mean bias error
+    '''
+
+    # Valor absoluto de "simulado - real"
+    diff = abs(T_cell_sim - T_cell_real)
+    mae = diff.mean()
+
+    return mae
 
 
 ### RESULTADOS NOCT ###
@@ -269,7 +288,7 @@ resultados_NOCT_Terracota = modelo_Ross(Terracota_filtered_Ross, "Terracota")
     ### ANTRACITA ###
     #################
 
-mbe_Antracita = {}
+metrics_Antracita = {}
 
 for i in range(1, 5):
 
@@ -291,28 +310,33 @@ for i in range(1, 5):
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
-    Antracita_filtered[delta_temp_celula_col] = Antracita_filtered[temp_celula_col] - Antracita_filtered[temp_sim_celula_col]
+    # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
+    Antracita_filtered[delta_temp_celula_col] = Antracita_filtered[temp_sim_celula_col] - Antracita_filtered[temp_celula_col]
 
-    # Calculamos el Mean Bias Error de esa columna (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
-    mbe_Antracita[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Antracita_filtered[temp_celula_col], Antracita_filtered[temp_sim_celula_col])
+    # Métricas estadísticas de la Antracita
+    # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
+    # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
+    metrics_Antracita[f"Celula_{i}"] = {
+        'MBE': mean_bias_error(Antracita_filtered[temp_sim_celula_col], Antracita_filtered[temp_celula_col]),
+        'MAE': mean_absolute_error(Antracita_filtered[temp_sim_celula_col], Antracita_filtered[temp_celula_col])
     }
 
 print("-" * 50)
-print("MBE-ANTRACITA")
-for celula, resultado in mbe_Antracita.items():
+print("MÉTRICAS-ANTRACITA")
+for celula, resultado in metrics_Antracita.items():
 
     numero_celula = celula.split('_')[1]
 
     print(f"- Célula {numero_celula}:")
     print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
+    print(f"    - MAE (ºC) = {resultado['MAE']:.2f}")
 
 
     #################
     ###   GREEN   ###
     #################
 
-mbe_Green = {}
+metrics_Green = {}
 
 for i in range(1, 5):
 
@@ -334,28 +358,33 @@ for i in range(1, 5):
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
-    Green_filtered[delta_temp_celula_col] = Green_filtered[temp_celula_col] - Green_filtered[temp_sim_celula_col]
+    # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
+    Green_filtered[delta_temp_celula_col] = Green_filtered[temp_sim_celula_col] - Green_filtered[temp_celula_col]
 
-    # Calculamos el Mean Bias Error de esa columna (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
-    mbe_Green[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Green_filtered[temp_celula_col], Green_filtered[temp_sim_celula_col])
+    # Métricas estadísticas de la Green
+    # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
+    # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
+    metrics_Green[f"Celula_{i}"] = {
+        'MBE': mean_bias_error(Green_filtered[temp_sim_celula_col], Green_filtered[temp_celula_col]),
+        'MAE': mean_absolute_error(Green_filtered[temp_sim_celula_col], Green_filtered[temp_celula_col])
     }
 
 print("-" * 50)
-print("MBE-GREEN")
-for celula, resultado in mbe_Green.items():
+print("MÉTRICAS-GREEN")
+for celula, resultado in metrics_Green.items():
 
     numero_celula = celula.split('_')[1]
 
     print(f"- Célula {numero_celula}:")
     print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
+    print(f"    - MAE (ºC) = {resultado['MAE']:.2f}")
 
 
     #################
     ### TERRACOTA ###
     #################
 
-mbe_Terracota = {}
+metrics_Terracota = {}
 
 for i in range(1, 5):
 
@@ -377,21 +406,26 @@ for i in range(1, 5):
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
-    Terracota_filtered[delta_temp_celula_col] = Terracota_filtered[temp_celula_col] - Terracota_filtered[temp_sim_celula_col]
+    # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
+    Terracota_filtered[delta_temp_celula_col] = Terracota_filtered[temp_sim_celula_col] - Terracota_filtered[temp_celula_col]
 
-    # Calculamos el Mean Bias Error de esa columna (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
-    mbe_Terracota[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Terracota_filtered[temp_celula_col], Terracota_filtered[temp_sim_celula_col])
+    # Métricas estadísticas de la Terracota
+    # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
+    # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
+    metrics_Terracota[f"Celula_{i}"] = {
+        'MBE': mean_bias_error(Terracota_filtered[temp_sim_celula_col], Terracota_filtered[temp_celula_col]),
+        'MAE': mean_absolute_error(Terracota_filtered[temp_sim_celula_col], Terracota_filtered[temp_celula_col])
     }
 
 print("-" * 50)
-print("MBE-TERRACOTA")
-for celula, resultado in mbe_Terracota.items():
+print("MÉTRICAS-TERRACOTA")
+for celula, resultado in metrics_Terracota.items():
 
     numero_celula = celula.split('_')[1]
 
     print(f"- Célula {numero_celula}:")
     print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
+    print(f"    - MAE (ºC) = {resultado['MAE']:.2f}")
 
 
 
