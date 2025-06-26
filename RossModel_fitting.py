@@ -52,8 +52,11 @@ def filtro_irradiancias_400(df):
         
         print(f"    -[DEBUG] {panel}: De {valores_validos_antes} valores, solo {valores_validos_antes-valores_bajos} superan el umbral de {umbral_irradiancia_min} W/m2")
         
+        # Marcamos valores NaN de forma segura
+        irrad_cel_calib_arriba_nan = df_filtrado[panel].isna()
+
         # Marcar para filtrar las filas con irradiancias bajas (incluyendo NaN de forma segura)
-        df_filtrado.loc[(df_filtrado[panel] < umbral_irradiancia_min) | df_filtrado[panel].isna(), 'filtrar'] = True
+        df_filtrado.loc[(df_filtrado[panel] < umbral_irradiancia_min) | irrad_cel_calib_arriba_nan, 'filtrar'] = True
 
     return df_filtrado
 
@@ -83,8 +86,10 @@ def filtro_ambiente(df):
 
         temp_muy_baja = df_filtrado[panel] < -10
         temp_muy_alta = df_filtrado[panel] > 50
+        temp_nan = df_filtrado[panel].isna()
         
-        df_filtrado.loc[temp_muy_baja | temp_muy_alta, 'filtrar'] = True
+        # Marcar para filtrar las filas con temperaturas ambientes altas y bajas (incluyendo NaN de forma segura)
+        df_filtrado.loc[temp_muy_baja | temp_muy_alta | temp_nan, 'filtrar'] = True
 
             # Datos del 29 de noviembre de 2024 hasta el 3 de junio de 2025:
                 # Media: 12.86 ºC
@@ -469,27 +474,17 @@ ax_T_comp.grid(True, alpha=0.7)
 
 fig_T_comp.tight_layout()
 fig_T_comp.show()
-#plt.savefig('fig_T_comp.pdf')
+plt.savefig('fig_T_comp.pdf')
 
 
-# Verificar si hay NaN o infinitos en tus datos
-print("=== DIAGNÓSTICO DE DATOS ===")
-print(f"Antracita - NaN en x: {np.isnan(x_ant).sum()}, NaN en y: {np.isnan(y_ant).sum()}")
-print(f"Antracita - Inf en x: {np.isinf(x_ant).sum()}, Inf en y: {np.isinf(y_ant).sum()}")
+# Imprimir estadísticas de las regresiones lineales
 print(f"Antracita - Total puntos: {len(x_ant)}")
-
-print(f"Green - NaN en x: {np.isnan(x_green).sum()}, NaN en y: {np.isnan(y_green).sum()}")
-print(f"Green - Inf en x: {np.isinf(x_green).sum()}, Inf en y: {np.isinf(y_green).sum()}")
-print(f"Green - Total puntos: {len(x_green)}")
-
-print(f"Terracota - NaN en x: {np.isnan(x_terra).sum()}, Inf en y: {np.isinf(y_terra).sum()}")
-print(f"Terracota - Inf en x: {np.isinf(x_terra).sum()}, Inf en y: {np.isinf(y_terra).sum()}")
-print(f"Terracota - Total puntos: {len(x_terra)}")
-
-
-# Imprimir estadísticas de las regresiones
 print(f"Antracita: R² = {r_value_ant**2:.3f}, pendiente = {slope_ant:.3f}")
+
+print(f"Green - Total puntos: {len(x_green)}")
 print(f"Green: R² = {r_value_green**2:.3f}, pendiente = {slope_green:.3f}")
+
+print(f"Terracota - Total puntos: {len(x_terra)}")
 print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
 
 
