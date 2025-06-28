@@ -107,8 +107,8 @@ num_arch = len(Dataloggerfiles)
 print("-" * 50)
 print(f"Total de archivos del Datalogger: {num_arch}")
 
-print(Dataloggerfiles[-1])
 fecha_solsticio = "2024_12_21"
+fecha_ultimo_arch = Dataloggerfiles[-1].split("_DAQ970A_Colores")[0]
 
 try:
     num_arch_solsticio = next(i for i, archivo in enumerate(Dataloggerfiles) 

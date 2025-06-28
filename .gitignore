@@ -8,3 +8,11 @@ __pycache__/
 
 # Figuras varias (exportadas como .pdf)
 *.pdf
+
+# Ficheros con los dataframes volcados
+*.xls
+*.xlsx
+
+# Ficheros de log
+*.txt
+*.log

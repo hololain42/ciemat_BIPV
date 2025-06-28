@@ -175,6 +175,10 @@ Antracita_filtered = filtro_DataLogger(Antracita, "Antracita")
 Green_filtered     = filtro_DataLogger(Green, "Green")
 Terracota_filtered = filtro_DataLogger(Terracota, "Terracota")
 
+# Informamos de que todos los filtros han sido aplicados
+print(f"[INFO] Todas los filtros aplicados")
+print("-" * 50)
+
 
 #%%
 
@@ -196,7 +200,10 @@ Terracota_filtered = filtro_DataLogger(Terracota, "Terracota")
 # Submuestreo reduce la frecuencia de muestreo de los datos, convirtiendo medidas realizadas con alta frecuencia 
 # en medidas promediadas y con menor frecuencia. Así reducimos el ruido manteniendo las tendencias principales.
 
-def Submuestreo(df, subgroup=2):
+# Tiempo de submuestreo (en minutos)
+tiempo_submuestreo = 2
+
+def Submuestreo(df, subgroup=tiempo_submuestreo):
     df = df.copy()
     
     # Aseguramos que el índice sea datetime
@@ -315,7 +322,8 @@ def zeros(DataFrame):
 
     return df_procesado
 
-# Informamos de que todos los filtros han sido aplicados
-print(f"[INFO] Todas los filtros aplicados, submuestreo completado")
+# Informamos de que el submuestreo ha sido terminado
+print(f"[INFO] Submuestreo completado, los datos se han agrupado cada {tiempo_submuestreo} minutos.")
 print("-" * 50)
+
 # %%
