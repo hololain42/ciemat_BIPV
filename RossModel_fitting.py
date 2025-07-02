@@ -16,6 +16,28 @@ from matplotlib.colors import LinearSegmentedColormap
 print(f"[INFO] Comienza el cálculo del modelo de Ross")
 print("-" * 50)
 
+# Corregimos la irradiancia de la célula en función de la temperatura
+def correccion_irradiancia_celula(G_cel, T_cel):
+    """
+    Esta función corrige el valor de la irradiancia de la célula en función de su temperatura
+        G = U/(F_1 * (1 + 0.0005 * (T_cell - 25ºC)))
+        G en W/m2, U/F_1 es lo que medimos experimentalmente (F_1 = 17153 V/(W/m2))
+        Por tanto, solo hay que dividir G_cel entre el factor (1 + 0.0005 * (T_cell - 25ºC)))
+    
+    Parámetros:
+    G_cel : pandas.DataFrame.column
+        Columna con los datos de irradiancia de la célula calibrada
+    T_cel : pandas.DataFrame.column
+        Columna con los datos de temperatura de la célula calibrada
+    
+    La función devuelve la columna con los valores de irradiancia corregidos
+    """
+
+    G_cel_corr = G_cel / (1 + 0.0005*(T_cel - 25))
+
+    return G_cel_corr
+
+
 ### FILTROS PREVIOS ###
 
 # Para los cálculos del modelo de Ross solo nos quedaremos con los datos que tengan G>400 W/m2 y datos razonables de temperatura ambiente
@@ -41,11 +63,27 @@ def filtro_irradiancias_400(df):
 
     # Búsqueda exacta de la columna, para que no coja también las columnas de temperatura de las células calibradas
     Irradiancias_Cel_Calib_400 = [col for col in df_filtrado.columns if col == 'Celula Calibrada Arriba']
-        
-    umbral_irradiancia_min = 400  # W/m2
-    
+    Temperatura_Cel_Calib_400  = [col for col in df_filtrado.columns if col == 'Temp (C) Celula Calibrada Arriba']
 
+    umbral_irradiancia_min = 400  # W/m2
+
+    # Procesamos cada panel
     for panel in Irradiancias_Cel_Calib_400:
+
+        # Seleccionamos la columna de temperatura que tenga el panel
+        col_temperatura = Temperatura_Cel_Calib_400[0]
+        
+        # Corregimos la irradiancia de la célula calibrada en función de su temperatura (solo si ambos valores son válidos)
+        mascara_datos_validos = df_filtrado[panel].notna() & df_filtrado[col_temperatura].notna()
+        
+        if mascara_datos_validos.sum() > 0:
+            # Aplicamos corrección por temperatura
+            df_filtrado.loc[mascara_datos_validos, panel] = correccion_irradiancia_celula(
+                df_filtrado.loc[mascara_datos_validos, panel], 
+                df_filtrado.loc[mascara_datos_validos, col_temperatura]
+            )
+        else:
+            print(f"    -[WARNING] No hay datos válidos para aplicar la corrección por temperatura a la célula calibrada")
 
         # Contar valores antes del filtro
         valores_validos_antes = df_filtrado[panel].notna().sum()
@@ -100,6 +138,35 @@ def filtro_ambiente(df):
 
     return df_filtrado
 
+# Función para comparar la irradiancia corregida y original de la célula calibrada (de arriba)
+def plot_irradiancia_comparacion(df, df_filtrado):
+
+    columna_irradiancia = 'Celula Calibrada Arriba'
+    columna_temperatura = 'Temp (C) Celula Calibrada Arriba'
+
+    if columna_irradiancia in df.columns and columna_irradiancia in df_filtrado.columns:
+        mascara_validos = df[columna_irradiancia].notna() & df[columna_temperatura].notna()
+        irradiancia_original = df.loc[mascara_validos, columna_irradiancia]
+        irradiancia_corregida = df_filtrado.loc[mascara_validos, columna_irradiancia]
+
+        fig = plt.figure(figsize=(10, 6))
+        fig.canvas.manager.set_window_title('Irradiancia experimental vs corregida')
+        plt.scatter(irradiancia_corregida, irradiancia_original, alpha=0.8)
+        plt.plot([irradiancia_original.min(), irradiancia_original.max()],
+             [irradiancia_original.min(), irradiancia_original.max()],
+             'r--', label='y = x')
+        plt.axvline(x = 400, color = 'xkcd:red orange', alpha=0.8, label = 'Umbral de irradiancia para calcular NOCT')
+        plt.xlabel('Irradiancia corregida (W/m²)')
+        plt.ylabel('Irradiancia experimental (W/m²)')
+        plt.title(f'Irradiancia experimental frente a corregida')
+        plt.legend(loc='best')
+        plt.grid(True, alpha=0.7)
+
+        plt.tight_layout()
+        plt.gcf().savefig('figuras/RossModel_fit/Irradiancia_Exp_vs_Corregida.pdf', bbox_inches='tight')
+        plt.gcf().savefig('figuras/RossModel_fit/png/Irradiancia_Exp_vs_Corregida.png', bbox_inches='tight')
+        #plt.show()
+
 
 # Filtro general para poder aplicar el modelo de Ross
 def filtro_modelo_Ross(df, name):
@@ -108,7 +175,10 @@ def filtro_modelo_Ross(df, name):
     df_filtrado = filtro_irradiancias_400(df_filtrado)
     df_filtrado = filtro_temperaturas(df_filtrado)
     df_filtrado = filtro_ambiente(df_filtrado)
-    # mas cosas
+    # mas filtros
+
+    # Realizar plot comparativo de las irradiancias antes y después de corregirse
+    plot_irradiancia_comparacion(df, df_filtrado)
 
     #df_filtrado.loc[df_filtrado["filtrar"] == True, :] = np.nan
 
@@ -429,6 +499,9 @@ for celula, resultado in metrics_Terracota.items():
     print(f"    - MAE (ºC) = {resultado['MAE']:.2f}")
 
 
+##### =============================== #####
+##### PLOT AND REPRESENTATION SECTION #####
+##### =============================== #####
 
 # ====================================
 # FIGURA TEMPERATURA 3 CÉLULAS
@@ -511,8 +584,8 @@ ax_T_comp_3_cels.legend(loc='best')
 ax_T_comp_3_cels.grid(True, alpha=0.7)
 
 fig_T_comp_3_cels.tight_layout()
-fig = plt.gcf().savefig('figuras/RossModel_fit/ALL_Celulas_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
-fig = plt.gcf().savefig('figuras/RossModel_fit/png/ALL_Celulas_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_T_comp_3_cels.savefig('figuras/RossModel_fit/ALL_Celulas_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
+fig_T_comp_3_cels.savefig('figuras/RossModel_fit/png/ALL_Celulas_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
 fig_T_comp_3_cels.show()
 
 # ====================================
