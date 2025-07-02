@@ -77,6 +77,7 @@ ax_Gpyr.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_Gpyr.autofmt_xdate() 
 
 fig_Gpyr.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Irradiancia_Piranometro.pdf', bbox_inches='tight')
 fig_Gpyr.show()
 
 
@@ -103,6 +104,7 @@ ax_G_arriba.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_G_arriba.autofmt_xdate() 
 
 fig_G_arriba.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Irradiancia_Celula_Calibrada_Arriba.pdf', bbox_inches='tight')
 fig_G_arriba.show()
 
 
@@ -129,16 +131,18 @@ ax_T_amb.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_T_amb.autofmt_xdate() 
 
 fig_T_amb.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Ambiente_Temperatura.pdf', bbox_inches='tight')
 fig_T_amb.show()
 
 
-""" 
+"""
 ### HISTOGRAMA DE TEMPERATURA AMBIENTE (lo comentamos por el momento, no es necesario que salga siempre)
 
 # Estadísticas básicas de la temperatura ambiente
+print("-" * 50)
 print("Estadísticas de temperatura ambiente:")
 col_T_amb = DataFrame_Temp_Ambiente.columns[0]
-stats_T_amb = DataFrame_Temp_Ambiente.describe()
+stats_T_amb = DataFrame_Temp_Ambiente.describe().round(2)
 print(stats_T_amb)
 
 # Plot del histograma de temperaturas
@@ -172,6 +176,7 @@ ax_hist_T_amb.text(0.05, 0.95, str_estadisticas, horizontalalignment='left',
 
 
 fig_hist_T_amb.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Ambiente_Temperatura_Histograma.pdf', bbox_inches='tight')
 fig_hist_T_amb.show()
 
 """
@@ -351,6 +356,7 @@ ax_V_antracita.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval)
 fig_V_antracita.autofmt_xdate() 
 
 fig_V_antracita.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Antracita_Voltaje.pdf', bbox_inches='tight')
 fig_V_antracita.show()
 
 
@@ -377,6 +383,7 @@ ax_I_antracita.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval)
 fig_I_antracita.autofmt_xdate() 
 
 fig_I_antracita.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Antracita_Corriente.pdf', bbox_inches='tight')
 fig_I_antracita.show()
 
 
@@ -403,6 +410,7 @@ ax_T_antracita.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval)
 fig_T_antracita.autofmt_xdate() 
 
 fig_T_antracita.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Antracita_Temperatura.pdf', bbox_inches='tight')
 fig_T_antracita.show()
 
     #############
@@ -432,6 +440,7 @@ ax_V_green.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_V_green.autofmt_xdate() 
 
 fig_V_green.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Green_Voltaje.pdf', bbox_inches='tight')
 fig_V_green.show()
 
 
@@ -458,6 +467,7 @@ ax_I_green.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_I_green.autofmt_xdate() 
 
 fig_I_green.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Green_Corriente.pdf', bbox_inches='tight')
 fig_I_green.show()
 
 
@@ -484,6 +494,7 @@ ax_T_green.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_T_green.autofmt_xdate() 
 
 fig_T_green.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Green_Temperatura.pdf', bbox_inches='tight')
 fig_T_green.show()
 
     #################
@@ -513,6 +524,7 @@ ax_V_terra.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_V_terra.autofmt_xdate() 
 
 fig_V_terra.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Terracota_Voltaje.pdf', bbox_inches='tight')
 fig_V_terra.show()
 
 
@@ -539,6 +551,7 @@ ax_I_terra.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_I_terra.autofmt_xdate() 
 
 fig_I_terra.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Terracota_Corriente.pdf', bbox_inches='tight')
 fig_I_terra.show()
 
 
@@ -565,6 +578,7 @@ ax_T_terra.xaxis.set_major_locator(mdates.HourLocator(interval=TickInterval))
 fig_T_terra.autofmt_xdate() 
 
 fig_T_terra.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Terracota_Temperatura.pdf', bbox_inches='tight')
 fig_T_terra.show()
 
 
@@ -637,6 +651,7 @@ ax_V_microinversor.xaxis.set_major_locator(mdates.HourLocator(interval=TickInter
 fig_V_microinversor.autofmt_xdate() 
 
 fig_V_microinversor.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Microinversor_Voltaje_Entrada_DC.pdf', bbox_inches='tight')
 fig_V_microinversor.show()
 
 
@@ -662,6 +677,7 @@ ax_I_microinversor.xaxis.set_major_locator(mdates.HourLocator(interval=TickInter
 fig_I_microinversor.autofmt_xdate() 
 
 fig_I_microinversor.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Microinversor_Corriente_Entrada_DC.pdf', bbox_inches='tight')
 fig_I_microinversor.show()
 
 
@@ -687,6 +703,7 @@ ax_P_microinversor.xaxis.set_major_locator(mdates.HourLocator(interval=TickInter
 fig_P_microinversor.autofmt_xdate() 
 
 fig_P_microinversor.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Microinversor_Potencia_Entrada_DC.pdf', bbox_inches='tight')
 fig_P_microinversor.show()
 
 
@@ -721,6 +738,7 @@ ax_P_output_microinversor.xaxis.set_major_locator(mdates.HourLocator(interval=Ti
 fig_P_output_microinversor.autofmt_xdate() 
 
 fig_P_output_microinversor.tight_layout()
+fig = plt.gcf().savefig('figuras/DatPlots/Microinversor_Potencia_Salida_AC.pdf', bbox_inches='tight')
 fig_P_output_microinversor.show()
 
 

@@ -6,8 +6,10 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Figuras varias (exportadas como .pdf)
+# Figuras varias (exportadas como .pdf, .png, ...)
+figuras/
 *.pdf
+*.png
 
 # Ficheros con los dataframes volcados
 *.xls
