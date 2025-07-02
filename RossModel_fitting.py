@@ -7,6 +7,8 @@ import pvlib
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from scipy import stats
+from scipy.stats import gaussian_kde
+from matplotlib.colors import LinearSegmentedColormap
 
 #%%
 
@@ -27,6 +29,7 @@ print("-" * 50)
 #   en los cálculos sería mayor que la que realmente reciben las células dada su orientación y sus pérdidas superficiales.
 #   Vamos a filtrar con la célula calibrada de arriba, ya que tiene las mismas pérdidas angulares que los arrays de colores 
 
+print(f"[INFO] Filtro de irradiancia:")
 def filtro_irradiancias_400(df):
 
     # Creamos una copia del DataFrame original y añadimos la columna 'filtrar' para determinar qué datos concretos
@@ -41,8 +44,6 @@ def filtro_irradiancias_400(df):
         
     umbral_irradiancia_min = 400  # W/m2
     
-    print("-" * 50)
-    print(f"[INFO] Filtro de irradiancia:")
 
     for panel in Irradiancias_Cel_Calib_400:
 
@@ -429,20 +430,23 @@ for celula, resultado in metrics_Terracota.items():
 
 
 
+# ====================================
+# FIGURA TEMPERATURA 3 CÉLULAS
+# ====================================
 # Plots comparación temperaturas
-fig_T_comp = plt.figure(figsize=(10, 6))
-fig_T_comp.canvas.manager.set_window_title('Comparacion T simulada y real')
+fig_T_comp_3_cels = plt.figure(figsize=(10, 6))
+fig_T_comp_3_cels.canvas.manager.set_window_title('Comparacion T simulada y real')
 plt.ioff()  # Use non-interactive mode.
 
 # Definimos objeto ax para distinguir entre figuras
-ax_T_comp = fig_T_comp.add_subplot(111)
-ax_T_comp.set_title("Comparación entre la temperatura simulada con NOCT y la experimental", fontsize=12, fontweight='normal')
+ax_T_comp_3_cels = fig_T_comp_3_cels.add_subplot(111)
+ax_T_comp_3_cels.set_title("Comparación entre la temperatura simulada con NOCT y la experimental", fontsize=12, fontweight='normal')
 
 # ANTRACITA
-ax_T_comp.plot(Antracita_filtered["Temp 1 (C) Antracita"], Antracita_filtered["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Antracita", color= "xkcd:charcoal grey")
-ax_T_comp.plot(Antracita_filtered["Temp 2 (C) Antracita"], Antracita_filtered["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
-ax_T_comp.plot(Antracita_filtered["Temp 3 (C) Antracita"], Antracita_filtered["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
-ax_T_comp.plot(Antracita_filtered["Temp 4 (C) Antracita"], Antracita_filtered["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+ax_T_comp_3_cels.plot(Antracita_filtered["Temp 1 (C) Antracita"], Antracita_filtered["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Antracita", color= "xkcd:charcoal grey")
+ax_T_comp_3_cels.plot(Antracita_filtered["Temp 2 (C) Antracita"], Antracita_filtered["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+ax_T_comp_3_cels.plot(Antracita_filtered["Temp 3 (C) Antracita"], Antracita_filtered["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+ax_T_comp_3_cels.plot(Antracita_filtered["Temp 4 (C) Antracita"], Antracita_filtered["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
 
 # ANTRACITA - Regresión lineal
 # Concatenar todos los datos de Antracita
@@ -458,13 +462,13 @@ y_ant = np.concatenate([Antracita_filtered["Temp_Sim 1 (C) Antracita"],
 # Calcular regresión
 slope_ant, intercept_ant, r_value_ant, p_value_ant, std_err_ant = stats.linregress(x_ant, y_ant)
 line_ant = slope_ant * x_ant + intercept_ant
-ax_T_comp.plot(x_ant, line_ant, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
+ax_T_comp_3_cels.plot(x_ant, line_ant, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
 
 # GREEN
-ax_T_comp.plot(Green_filtered["Temp 1 (C) Green"], Green_filtered["Temp_Sim 1 (C) Green"], linestyle="", marker= ".", label= "Green", color= "xkcd:leaf green")
-ax_T_comp.plot(Green_filtered["Temp 2 (C) Green"], Green_filtered["Temp_Sim 2 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
-ax_T_comp.plot(Green_filtered["Temp 3 (C) Green"], Green_filtered["Temp_Sim 3 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
-ax_T_comp.plot(Green_filtered["Temp 4 (C) Green"], Green_filtered["Temp_Sim 4 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+ax_T_comp_3_cels.plot(Green_filtered["Temp 1 (C) Green"], Green_filtered["Temp_Sim 1 (C) Green"], linestyle="", marker= ".", label= "Green", color= "xkcd:leaf green")
+ax_T_comp_3_cels.plot(Green_filtered["Temp 2 (C) Green"], Green_filtered["Temp_Sim 2 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+ax_T_comp_3_cels.plot(Green_filtered["Temp 3 (C) Green"], Green_filtered["Temp_Sim 3 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+ax_T_comp_3_cels.plot(Green_filtered["Temp 4 (C) Green"], Green_filtered["Temp_Sim 4 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
 
 # GREEN - Regresión lineal
 x_green = np.concatenate([Green_filtered["Temp 1 (C) Green"],
@@ -478,13 +482,13 @@ y_green = np.concatenate([Green_filtered["Temp_Sim 1 (C) Green"],
 
 slope_green, intercept_green, r_value_green, p_value_green, std_err_green = stats.linregress(x_green, y_green)
 line_green = slope_green * x_green + intercept_green
-ax_T_comp.plot(x_green, line_green, color="xkcd:irish green", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
+ax_T_comp_3_cels.plot(x_green, line_green, color="xkcd:irish green", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
 
 # TERRACOTA
-ax_T_comp.plot(Terracota_filtered["Temp 1 (C) Terracota"], Terracota_filtered["Temp_Sim 1 (C) Terracota"], linestyle="", marker= ".", label= "Terracota", color= "xkcd:terracotta")
-ax_T_comp.plot(Terracota_filtered["Temp 2 (C) Terracota"], Terracota_filtered["Temp_Sim 2 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
-ax_T_comp.plot(Terracota_filtered["Temp 3 (C) Terracota"], Terracota_filtered["Temp_Sim 3 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
-ax_T_comp.plot(Terracota_filtered["Temp 4 (C) Terracota"], Terracota_filtered["Temp_Sim 4 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+ax_T_comp_3_cels.plot(Terracota_filtered["Temp 1 (C) Terracota"], Terracota_filtered["Temp_Sim 1 (C) Terracota"], linestyle="", marker= ".", label= "Terracota", color= "xkcd:terracotta")
+ax_T_comp_3_cels.plot(Terracota_filtered["Temp 2 (C) Terracota"], Terracota_filtered["Temp_Sim 2 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+ax_T_comp_3_cels.plot(Terracota_filtered["Temp 3 (C) Terracota"], Terracota_filtered["Temp_Sim 3 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+ax_T_comp_3_cels.plot(Terracota_filtered["Temp 4 (C) Terracota"], Terracota_filtered["Temp_Sim 4 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
 
 # TERRACOTA - Regresión lineal
 x_terra = np.concatenate([Terracota_filtered["Temp 1 (C) Terracota"],
@@ -498,20 +502,214 @@ y_terra = np.concatenate([Terracota_filtered["Temp_Sim 1 (C) Terracota"],
 
 slope_terra, intercept_terra, r_value_terra, p_value_terra, std_err_terra = stats.linregress(x_terra, y_terra)
 line_terra = slope_terra * x_terra + intercept_terra
-ax_T_comp.plot(x_terra, line_terra, color="xkcd:tangerine", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
+ax_T_comp_3_cels.plot(x_terra, line_terra, color="xkcd:tangerine", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
 
 
-ax_T_comp.set_xlabel('Temperatura experimental (C)')
-ax_T_comp.set_ylabel('Temperatura simulada (C)')
-ax_T_comp.legend(loc='best')
-ax_T_comp.grid(True, alpha=0.7)
+ax_T_comp_3_cels.set_xlabel('Temperatura experimental (ºC)')
+ax_T_comp_3_cels.set_ylabel('Temperatura simulada (ºC)')
+ax_T_comp_3_cels.legend(loc='best')
+ax_T_comp_3_cels.grid(True, alpha=0.7)
 
-fig_T_comp.tight_layout()
-fig_T_comp.show()
-plt.savefig('fig_T_comp.pdf')
+fig_T_comp_3_cels.tight_layout()
+fig = plt.gcf().savefig('figuras/RossModel_fit/ALL_Celulas_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
+fig = plt.gcf().savefig('figuras/RossModel_fit/png/ALL_Celulas_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_T_comp_3_cels.show()
+
+# ====================================
+# FIGURA INDIVIDUAL - ANTRACITA
+# ====================================
+fig_ant = plt.figure(figsize=(8, 6))
+fig_ant.canvas.manager.set_window_title('Antracita - T simulada vs real')
+ax_ant = fig_ant.add_subplot(111)
+ax_ant.set_title("Antracita - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
+
+# Plot datos
+ax_ant.plot(Antracita_filtered["Temp 1 (C) Antracita"], Antracita_filtered["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:charcoal grey")
+ax_ant.plot(Antracita_filtered["Temp 2 (C) Antracita"], Antracita_filtered["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:dark grey")
+ax_ant.plot(Antracita_filtered["Temp 3 (C) Antracita"], Antracita_filtered["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:grey")
+ax_ant.plot(Antracita_filtered["Temp 4 (C) Antracita"], Antracita_filtered["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:light grey")
+
+# Regresión lineal
+ax_ant.plot(x_ant, line_ant, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3, 
+           label=f'R²={r_value_ant**2:.3f}')
+
+ax_ant.set_xlabel('Temperatura experimental (ºC)')
+ax_ant.set_ylabel('Temperatura simulada (ºC)')
+ax_ant.legend(loc='best')
+ax_ant.grid(True, alpha=0.7)
+
+fig_ant.tight_layout()
+fig_ant.savefig('figuras/RossModel_fit/Antracita_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
+fig_ant.savefig('figuras/RossModel_fit/png/Antracita_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_ant.show()
+
+# ====================================
+# FIGURA INDIVIDUAL - GREEN
+# ====================================
+fig_green = plt.figure(figsize=(8, 6))
+fig_green.canvas.manager.set_window_title('Green - T simulada vs real')
+ax_green_ind = fig_green.add_subplot(111)
+ax_green_ind.set_title("Green - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
+
+# Plot datos
+ax_green_ind.plot(Green_filtered["Temp 1 (C) Green"], Green_filtered["Temp_Sim 1 (C) Green"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:leaf green")
+ax_green_ind.plot(Green_filtered["Temp 2 (C) Green"], Green_filtered["Temp_Sim 2 (C) Green"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:forest green")
+ax_green_ind.plot(Green_filtered["Temp 3 (C) Green"], Green_filtered["Temp_Sim 3 (C) Green"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:green")
+ax_green_ind.plot(Green_filtered["Temp 4 (C) Green"], Green_filtered["Temp_Sim 4 (C) Green"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:lime green")
+
+# Regresión lineal
+ax_green_ind.plot(x_green, line_green, color="xkcd:irish green", linestyle='-', alpha=0.8, linewidth=2, zorder=3,
+                 label=f'R²={r_value_green**2:.3f}')
+
+ax_green_ind.set_xlabel('Temperatura experimental (ºC)')
+ax_green_ind.set_ylabel('Temperatura simulada (ºC)')
+ax_green_ind.legend(loc='best')
+ax_green_ind.grid(True, alpha=0.7)
+
+fig_green.tight_layout()
+fig_green.savefig('figuras/RossModel_fit/Green_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
+fig_green.savefig('figuras/RossModel_fit/png/Green_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_green.show()
+
+# ====================================
+# FIGURA INDIVIDUAL - TERRACOTA
+# ====================================
+fig_terra = plt.figure(figsize=(8, 6))
+fig_terra.canvas.manager.set_window_title('Terracota - T simulada vs real')
+ax_terra_ind = fig_terra.add_subplot(111)
+ax_terra_ind.set_title("Terracota - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
+
+# Plot datos
+ax_terra_ind.plot(Terracota_filtered["Temp 1 (C) Terracota"], Terracota_filtered["Temp_Sim 1 (C) Terracota"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:terracotta")
+ax_terra_ind.plot(Terracota_filtered["Temp 2 (C) Terracota"], Terracota_filtered["Temp_Sim 2 (C) Terracota"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:burnt orange")
+ax_terra_ind.plot(Terracota_filtered["Temp 3 (C) Terracota"], Terracota_filtered["Temp_Sim 3 (C) Terracota"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:orange")
+ax_terra_ind.plot(Terracota_filtered["Temp 4 (C) Terracota"], Terracota_filtered["Temp_Sim 4 (C) Terracota"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:peach")
+
+# Regresión lineal
+ax_terra_ind.plot(x_terra, line_terra, color="xkcd:tangerine", linestyle='-', alpha=0.8, linewidth=2, zorder=3,
+                 label=f'R²={r_value_terra**2:.3f}')
+
+ax_terra_ind.set_xlabel('Temperatura experimental (ºC)')
+ax_terra_ind.set_ylabel('Temperatura simulada (ºC)')
+ax_terra_ind.legend(loc='best')
+ax_terra_ind.grid(True, alpha=0.7)
+
+fig_terra.tight_layout()
+fig_terra.savefig('figuras/RossModel_fit/Terracota_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
+fig_terra.savefig('figuras/RossModel_fit/png/Terracota_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_terra.show()
+
+
+# ======================================
+# FIGURAS DENSIDAD DE PUNTOS HEXAGONALES
+# ======================================
+# Crear colormap según la densidad (blanco -> azul -> rojo)
+colors = ['white', 'lightblue', 'blue', 'orange', 'red', 'darkred']
+n_bins = 256
+cmap_custom = LinearSegmentedColormap.from_list('density', colors, N=n_bins)
+
+# ====================================
+# FIGURA DENSIDAD - ANTRACITA (HEX)
+# ====================================
+fig_densidad_hex_ant = plt.figure(figsize=(10, 8))
+fig_densidad_hex_ant.canvas.manager.set_window_title('Antracita - Densidad de puntos hexagonal')
+ax_densidad_hex_ant = fig_densidad_hex_ant.add_subplot(111)
+
+# Concatenar todos los datos de Antracita
+x_ant_all = x_ant
+y_ant_all = y_ant
+
+# Crear plot de densidad 2D hexagonal
+hb_ant = ax_densidad_hex_ant.hexbin(x_ant_all, y_ant_all, gridsize=30, cmap=cmap_custom, mincnt=1)
+cb_hex = plt.colorbar(hb_ant, ax=ax_densidad_hex_ant, label='Número de puntos')
+
+# Añadir regresión lineal como referencia
+x_sorted = np.sort(x_ant_all)
+line_sorted = slope_ant * x_sorted + intercept_ant
+ax_densidad_hex_ant.plot(x_sorted, line_sorted, color='white', linestyle='--', linewidth=2,
+               label=f'R²={r_value_ant**2:.3f}')
+
+ax_densidad_hex_ant.set_xlabel('Temperatura experimental (°C)')
+ax_densidad_hex_ant.set_ylabel('Temperatura simulada (°C)')
+ax_densidad_hex_ant.set_title('Antracita - Densidad de puntos: Temperatura simulada vs experimental',
+                    fontsize=12, fontweight='normal')
+ax_densidad_hex_ant.legend(loc='best')
+ax_densidad_hex_ant.grid(True, alpha=0.3)
+
+fig_densidad_hex_ant.tight_layout()
+fig_densidad_hex_ant.savefig('figuras/RossModel_fit/Hexbin_Antracita_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
+fig_densidad_hex_ant.savefig('figuras/RossModel_fit/png/Hexbin_Antracita_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_densidad_hex_ant.show()
+
+# ====================================
+# FIGURA DENSIDAD - GREEN (HEX)
+# ====================================
+fig_densidad_hex_green = plt.figure(figsize=(10, 8))
+fig_densidad_hex_green.canvas.manager.set_window_title('Green - Densidad de puntos hexagonal')
+ax_densidad_hex_green = fig_densidad_hex_green.add_subplot(111)
+
+# Concatenar todos los datos de green
+x_green_all = x_green
+y_green_all = y_green
+
+# Crear plot de densidad 2D hexagonal
+hb_green = ax_densidad_hex_green.hexbin(x_green_all, y_green_all, gridsize=30, cmap=cmap_custom, mincnt=1)
+cb_hex = plt.colorbar(hb_green, ax=ax_densidad_hex_green, label='Número de puntos')
+
+# Añadir regresión lineal como referencia
+x_sorted = np.sort(x_green_all)
+line_sorted = slope_green * x_sorted + intercept_green
+ax_densidad_hex_green.plot(x_sorted, line_sorted, color='white', linestyle='--', linewidth=2,
+               label=f'R²={r_value_green**2:.3f}')
+
+ax_densidad_hex_green.set_xlabel('Temperatura experimental (°C)')
+ax_densidad_hex_green.set_ylabel('Temperatura simulada (°C)')
+ax_densidad_hex_green.set_title('Green - Densidad de puntos: Temperatura simulada vs experimental',
+                    fontsize=12, fontweight='normal')
+ax_densidad_hex_green.legend(loc='best')
+ax_densidad_hex_green.grid(True, alpha=0.3)
+
+fig_densidad_hex_green.tight_layout()
+fig_densidad_hex_green.savefig('figuras/RossModel_fit/Hexbin_Green_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
+fig_densidad_hex_green.savefig('figuras/RossModel_fit/png/Hexbin_Green_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_densidad_hex_green.show()
+
+# ====================================
+# FIGURA DENSIDAD - TERRACOTA (HEX)
+# ====================================
+fig_densidad_hex_terra = plt.figure(figsize=(10, 8))
+fig_densidad_hex_terra.canvas.manager.set_window_title('Terracota - Densidad de puntos hexagonal')
+ax_densidad_hex_terra = fig_densidad_hex_terra.add_subplot(111)
+
+# Concatenar todos los datos de Terracota
+x_terra_all = x_terra
+y_terra_all = y_terra
+
+# Crear plot de densidad 2D hexagonal
+hb_terra = ax_densidad_hex_terra.hexbin(x_terra_all, y_terra_all, gridsize=30, cmap=cmap_custom, mincnt=1)
+cb_hex = plt.colorbar(hb_terra, ax=ax_densidad_hex_terra, label='Número de puntos')
+
+# Añadir regresión lineal como referencia
+x_sorted = np.sort(x_terra_all)
+line_sorted = slope_terra * x_sorted + intercept_terra
+ax_densidad_hex_terra.plot(x_sorted, line_sorted, color='white', linestyle='--', linewidth=2,
+               label=f'R²={r_value_terra**2:.3f}')
+
+ax_densidad_hex_terra.set_xlabel('Temperatura experimental (°C)')
+ax_densidad_hex_terra.set_ylabel('Temperatura simulada (°C)')
+ax_densidad_hex_terra.set_title('Terracota - Densidad de puntos: Temperatura simulada vs experimental',
+                    fontsize=12, fontweight='normal')
+ax_densidad_hex_terra.legend(loc='best')
+ax_densidad_hex_terra.grid(True, alpha=0.3)
+
+fig_densidad_hex_terra.tight_layout()
+fig_densidad_hex_terra.savefig('figuras/RossModel_fit/Hexbin_Terracota_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
+fig_densidad_hex_terra.savefig('figuras/RossModel_fit/png/Hexbin_Terracota_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_densidad_hex_terra.show()
 
 
 # Imprimir estadísticas de las regresiones lineales
+print("-" * 50)
 print(f"Antracita - Total puntos: {len(x_ant)}")
 print(f"Antracita: R² = {r_value_ant**2:.3f}, pendiente = {slope_ant:.3f}")
 
@@ -523,6 +721,11 @@ print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
 
 
 mostrar_tiempo_total()
+
+# TODO: Corregir irradiancia células calibradas G = U/(F1 * (1+0.0005*(T-25ºC))
+# TODO: Comparar irradiancia corregida con la normal 
+
+# TODO: Cargar xlsx ya filtrado y usar eso en el RossModel_fitting (cuidado porque habrá que poner filtros de NaN y datos vacíos)
 
 # TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?
 # TODO: hay mucha diferencia (delta T grande) pronto por la mañana... ¿por qué? representar Delta T para ver esto
