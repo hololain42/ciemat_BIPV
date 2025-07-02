@@ -499,6 +499,45 @@ for celula, resultado in metrics_Terracota.items():
     print(f"    - MAE (ºC) = {resultado['MAE']:.2f}")
 
 
+def construir_dataframe_resultados(tipo_celula, resultados_NOCT, metrics):
+    columnas = [f"Celula {celula.split('_')[1]}" for celula in resultados_NOCT.keys()]
+    
+    fila_NOCT    = [round(resultados_NOCT[celula]['NOCT_eff'], 2) for celula in resultados_NOCT]
+    fila_R2_NOCT = [round(resultados_NOCT[celula]['R2'], 4) for celula in resultados_NOCT]
+    fila_MBE     = [round(metrics[celula]['MBE'], 2) for celula in resultados_NOCT]
+    fila_MAE     = [round(metrics[celula]['MAE'], 2) for celula in resultados_NOCT]
+
+    df = pd.DataFrame(
+        [fila_NOCT, fila_R2_NOCT, fila_MBE, fila_MAE],
+        index=["NOCT (ºC)", "R2_NOCT", "MBE (ºC)", "MAE (ºC)"],
+        columns=columnas
+    )
+
+    # Añade MultiIndex en columnas para indicar el tipo de celula
+    df.columns = pd.MultiIndex.from_product([[tipo_celula], df.columns])
+
+    return df
+
+
+# Construimos dataframes para cada tecnología
+df_Antracita_excel  = construir_dataframe_resultados("Antracita", resultados_NOCT_Antracita, metrics_Antracita)
+df_Green_excel      = construir_dataframe_resultados("Green", resultados_NOCT_Green, metrics_Green)
+df_Terracota_excel  = construir_dataframe_resultados("Terracota", resultados_NOCT_Terracota, metrics_Terracota)
+
+# Unimos horizontalmente
+df_resultados_final = pd.concat([df_Antracita_excel, df_Green_excel, df_Terracota_excel], axis=1)
+
+# Guardamos en Excel
+nombre_archivo_resultados = f"Resultados_NOCT_Modelo_Ross_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
+
+with pd.ExcelWriter(nombre_archivo_resultados, engine='xlsxwriter') as writer:
+    df_resultados_final.to_excel(writer, sheet_name='Resumen', startrow=0, merge_cells=True)
+
+print("-" * 50)
+print(f"[INFO] Archivo Excel con los resultados guardado como '{nombre_archivo_resultados}'.")
+
+
+
 ##### =============================== #####
 ##### PLOT AND REPRESENTATION SECTION #####
 ##### =============================== #####
@@ -793,12 +832,16 @@ print(f"Terracota - Total puntos: {len(x_terra)}")
 print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
 
 
+
+
 mostrar_tiempo_total()
 
 # TODO: Corregir irradiancia células calibradas G = U/(F1 * (1+0.0005*(T-25ºC))
 # TODO: Comparar irradiancia corregida con la normal 
 
 # TODO: Cargar xlsx ya filtrado y usar eso en el RossModel_fitting (cuidado porque habrá que poner filtros de NaN y datos vacíos)
+
+# TODO: Función para crear estructura de carpetas (/figuras/, /Resultados/, y meter los excel ahí directamente)
 
 # TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?
 # TODO: hay mucha diferencia (delta T grande) pronto por la mañana... ¿por qué? representar Delta T para ver esto
