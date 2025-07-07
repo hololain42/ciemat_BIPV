@@ -201,6 +201,10 @@ nombre_archivo_filtrado = f"Datos_filtrados_Datalogger_DAQ970A_Inic_{fecha_solst
 archivo_datalogger_filtrado = combinar_dataframes_con_fechas_distintas(Antracita_filtered, Green_filtered, Terracota_filtered, nombre_archivo_filtrado)
 
 
+# %%
+
+
+"""
 #Antracita_filtered.interpolate(method='linear', inplace=True)
 #Green_filtered.interpolate(method='linear', inplace=True)
 #Terracota_filtered.interpolate(method='linear', inplace=True)
@@ -278,6 +282,7 @@ def zeros(DataFrame):
     df_procesado = df_procesado.sort_index()
 
     return df_procesado
+"""
 
 
 # %%
