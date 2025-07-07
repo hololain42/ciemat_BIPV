@@ -1,6 +1,8 @@
 #%%
 
 from Data import *
+from submuestreo import Submuestreo, tiempo_submuestreo
+from exportar_dataframe import combinar_dataframes_con_fechas_distintas
 import threading
 
 # Intervalo de tiempo para la gráfica (en horas)
@@ -892,5 +894,15 @@ Terracota["Temp (C) Ambiente"] = Temp_Ambiente
 Terracota.set_index('Datetime', inplace=True)
 
 
+# Volcamos todos los datos submuestrados a un archivo antes de aplicarle cualquier filtro
+Antracita_submuestreo = Submuestreo(Antracita)
+Green_submuestreo     = Submuestreo(Green)
+Terracota_submuestreo = Submuestreo(Terracota)
+
+# Volcamos todos los datos submuestrados y filtrados a un archivo antes de aplicarle cualquier filtro
+nombre_archivo_submuestreado = f"Datos_SIN_FILTRAR_Datalogger_DAQ970A_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
+
+# Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
+archivo_datalogger_submuestrado = combinar_dataframes_con_fechas_distintas(Antracita_submuestreo, Green_submuestreo, Terracota_submuestreo, nombre_archivo_submuestreado)
 
 # %%

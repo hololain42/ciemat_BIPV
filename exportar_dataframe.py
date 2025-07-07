@@ -1,5 +1,5 @@
 #%%
-from Filter import *
+import pandas as pd
 
 #%%
 
@@ -14,9 +14,11 @@ from Filter import *
 def combinar_dataframes_con_fechas_distintas(df_antracita, df_green, df_terracota, filename):
     """
     Combina los dataframes incluso si tienen fechas diferentes y lo exporta a un fichero .xlsx
+    Preserva las columnas comunes aunque algunos dataframes estén filtrados
 
     Parámetros:
-        df (DataFrame): Dataframe de pandas de la célula de color concreto
+        df_antracita, df_green, df_terracota (DataFrame): Dataframes de pandas de cada célula
+        filename (str): Nombre del archivo de salida
 
     Devuelve:
         df_final (DataFrame): DataFrame de pandas combinado en el orden específico que le hemos impuesto
@@ -29,14 +31,47 @@ def combinar_dataframes_con_fechas_distintas(df_antracita, df_green, df_terracot
     df_green_copy     = preparar_para_merge(df_green, 'Green')
     df_terracota_copy = preparar_para_merge(df_terracota, 'Terracota')
     
+    # Definir columnas comunes a los tres dataframes
+    columnas_comunes = [
+        'Temp (C) Ambiente',
+        'Piranometro Referencia',
+        'Celula Calibrada Abajo',
+        'Celula Calibrada Arriba',
+        'Celula Calibrada Izquierda',
+        'Temp (C) Celula Calibrada Abajo',
+        'Temp (C) Celula Calibrada Arriba'
+    ]
+
+    # Verificar en qué dataframes están las columnas comunes (para debugging)
+    for df, nombre in [(df_antracita_copy, 'Antracita'), (df_green_copy, 'Green'), (df_terracota_copy, 'Terracota')]:
+        columnas_comunes_presentes = [col for col in columnas_comunes if col in df.columns]
+
+
     # Merge de los DataFrames completo (outer join) para incluir todas las fechas
     # Combinamos paso a paso, ya que pd.merge solo acepta 2 dataframes a la vez
+
     # Primero los DataFrames de Antracita y Green
     df_temp = pd.merge(df_antracita_copy, df_green_copy, on='Datetime', how='outer', suffixes=('', '_green'))
     
     # Luego combinamos el resultado con Terracota
     df_combinado = pd.merge(df_temp, df_terracota_copy, on='Datetime', how='outer', suffixes=('', '_terracota'))
     
+    # Identificar columnas duplicadas (que tienen suffixes)
+    columnas_con_suffix = [col for col in df_combinado.columns if col.endswith(('_green', '_terracota'))]
+    
+    # Para cada columna con suffix, verificar si es una columna común
+    for col_suffix in columnas_con_suffix:
+        # Obtener el nombre base de la columna (sin suffix)
+        if col_suffix.endswith('_green'):
+            col_base = col_suffix.replace('_green', '')
+        elif col_suffix.endswith('_terracota'):
+            col_base = col_suffix.replace('_terracota', '')
+        
+        # Si la columna base es una columna común, llenar los valores NaN con los valores de la columna con suffix
+        if col_base in columnas_comunes and col_base in df_combinado.columns:
+            # Combinar valores: usar la columna base, pero llenar NaN con valores de la columna con suffix
+            df_combinado[col_base] = df_combinado[col_base].fillna(df_combinado[col_suffix])
+
     # Eliminar columnas duplicadas si las hay
     # Esto elimina columnas que terminan en '_green' o '_terracota' (duplicadas)
     df_combinado = df_combinado.loc[:, ~df_combinado.columns.str.endswith(('_green', '_terracota'))]
@@ -123,6 +158,13 @@ def combinar_dataframes_con_fechas_distintas(df_antracita, df_green, df_terracot
 # Función auxiliar para que los DataFrames tengan la columna Datetime correcta, asociada a su index
 def preparar_para_merge(df, nombre=''):
 
+    """
+    Prepara un dataframe para el merge, asegurando que tenga la columna Datetime
+    """
+    if df.empty:
+        print(f"DataFrame {nombre} está vacío después del filtrado")
+        return df
+
     df = df.reset_index()
     # Si el índice original no tenía nombre, Pandas lo llama 'index'
     if 'index' in df.columns:
@@ -135,12 +177,6 @@ def preparar_para_merge(df, nombre=''):
     df['Datetime'] = pd.to_datetime(df['Datetime'])  # Asegurar formato datetime
     
     return df
-
-
-nombre_archivo_filtrado = f"Datos_filtrados_Datalogger_DAQ970A_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
-
-# Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
-archivo_datalogger_filtrado = combinar_dataframes_con_fechas_distintas(Antracita_filtered, Green_filtered, Terracota_filtered, nombre_archivo_filtrado)
 
 
 #%%

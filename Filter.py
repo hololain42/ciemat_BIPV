@@ -2,6 +2,7 @@
 
 from DatPlots import *
 from submuestreo import Submuestreo, tiempo_submuestreo
+from exportar_dataframe import combinar_dataframes_con_fechas_distintas
 from datetime import time
 
 #%%
@@ -193,8 +194,11 @@ DataFrame_Irradiancia_Submuestreado = Submuestreo(DataFrame_Irradiancia)
 print(f"[INFO] Submuestreo completado, los datos se han agrupado cada {tiempo_submuestreo} minutos.")
 print("-" * 50)
 
+# Volcamos todos los datos submuestrados y filtrados a un archivo antes de aplicarle cualquier filtro
+nombre_archivo_filtrado = f"Datos_filtrados_Datalogger_DAQ970A_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
 
-
+# Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
+archivo_datalogger_filtrado = combinar_dataframes_con_fechas_distintas(Antracita_filtered, Green_filtered, Terracota_filtered, nombre_archivo_filtrado)
 
 
 #Antracita_filtered.interpolate(method='linear', inplace=True)
