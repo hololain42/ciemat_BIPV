@@ -149,8 +149,9 @@ def combinar_dataframes_con_fechas_distintas(df_antracita, df_green, df_terracot
     # Exportar
     df_final.to_excel(filename, index=False, sheet_name='Datos_Combinados')
     
-    print(f"Creado el archivo de datos filtrados: {filename}")
+    print(f"Archivo de datos creado: {filename}")
     print(f"Número de filas: {len(df_final)}")
+    print("-" * 50)
     
     return df_final
 

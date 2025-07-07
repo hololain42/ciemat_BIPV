@@ -899,6 +899,9 @@ Antracita_submuestreo = Submuestreo(Antracita)
 Green_submuestreo     = Submuestreo(Green)
 Terracota_submuestreo = Submuestreo(Terracota)
 
+print(f"[INFO] Submuestreo previo sin filtrar completado. Procedemos a exportar el archivo.")
+print("-" * 50)
+
 # Volcamos todos los datos submuestrados y filtrados a un archivo antes de aplicarle cualquier filtro
 nombre_archivo_submuestreado = f"Datos_SIN_FILTRAR_Datalogger_DAQ970A_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
 
