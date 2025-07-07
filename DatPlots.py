@@ -893,8 +893,12 @@ Terracota["Temp (C) Celula Calibrada Abajo"] = Temp_CelulaCalibrada_Abajo
 Terracota["Temp (C) Ambiente"] = Temp_Ambiente
 Terracota.set_index('Datetime', inplace=True)
 
+# Informamos de que comienza el submuestreo
+print(f"[INFO] Comienza el submuestreo de datos SIN FILTRAR, se agruparán los datos cada {tiempo_submuestreo} minutos.")
+print("-" * 50)
 
-# Volcamos todos los datos submuestrados a un archivo antes de aplicarle cualquier filtro
+# Submuestreamos los datos ahora porque queremos volcar todos los datos a un archivo antes de aplicarle cualquier filtro, 
+# para asi tener una referencia y poder compararlos con los datos filtrados
 Antracita_submuestreo = Submuestreo(Antracita)
 Green_submuestreo     = Submuestreo(Green)
 Terracota_submuestreo = Submuestreo(Terracota)

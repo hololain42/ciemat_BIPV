@@ -184,6 +184,10 @@ print("-" * 50)
 
 #%%
 
+# Informamos de que comienza el submuestreo
+print(f"[INFO] Comienza el submuestreo de datos filtrados, se agruparán los datos cada {tiempo_submuestreo} minutos.")
+print("-" * 50)
+
 Antracita_filtered = Submuestreo(Antracita_filtered)
 Green_filtered     = Submuestreo(Green_filtered)
 Terracota_filtered = Submuestreo(Terracota_filtered)
