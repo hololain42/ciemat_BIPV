@@ -1,6 +1,9 @@
 # Directorio de datos (no subir)
 Datos Datalogger/
 
+# Virtual Environment
+.venv/
+
 # Archivos Python estándar
 __pycache__/
 *.pyc
