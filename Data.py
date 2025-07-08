@@ -33,6 +33,34 @@ def mostrar_tiempo_total():
         print(f"[INFO] Tiempo total de ejecución: {horas}h {minutos}m {segundos:.1f}s")
 
 
+print("-" * 50)
+print(f"[INFO] Creamos la estructura de directorios del proyecto:")
+
+# CREAMOS LA ESTRUCTURA DE CARPETAS DEL PROYECTO
+directorios_necesarios = [
+    "Excel Resultados",
+    "Excel Resultados/Datos Submuestreados",
+    "Excel Resultados/NOCT",
+    "figuras",
+    "figuras/DatPlots",
+    "figuras/RossModel_fit",
+]
+
+def crear_estructura_directorios():
+    for dir in directorios_necesarios:
+        try:
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+                print(f"-Directorio creado: {dir}")
+            else:
+                print(f"-El directorio ya existe: {dir}")
+        except Exception as e:
+            print(f"-->Error al crear '{dir}': {e}")
+
+
+crear_estructura_directorios()
+
+
 ##### IMPORT DATA SECTION #####
 
 '''

@@ -12,6 +12,7 @@ figuras/
 *.png
 
 # Ficheros con los dataframes volcados
+Excel Resultados/
 *.xls
 *.xlsx
 
