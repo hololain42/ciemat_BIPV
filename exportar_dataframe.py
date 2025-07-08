@@ -1,5 +1,7 @@
 #%%
 import pandas as pd
+import os
+import shutil
 
 #%%
 
@@ -178,6 +180,43 @@ def preparar_para_merge(df, nombre=''):
     df['Datetime'] = pd.to_datetime(df['Datetime'])  # Asegurar formato datetime
     
     return df
+
+
+def mover_archivo(nombre_archivo, carpeta_destino_relativa):
+    """
+    Mueve un archivo a una carpeta destino (relativa al directorio del script).
+    
+    Args:
+        nombre_archivo (str): Nombre del archivo con extensión.
+        carpeta_destino_relativa (str): Ruta relativa de la carpeta destino.
+    """
+    # Ruta base (donde está este script)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Ruta completa al archivo original
+    ruta_origen = os.path.join(base_dir, nombre_archivo)
+
+    # Ruta completa a la carpeta de destino
+    ruta_destino = os.path.join(base_dir, carpeta_destino_relativa)
+
+    # Aseguramos que la carpeta destino exista
+    os.makedirs(ruta_destino, exist_ok=True)
+
+    # Ruta completa del archivo en destino
+    ruta_final = os.path.join(ruta_destino, nombre_archivo)
+
+    # Comprobamos si el archivo existe antes de mover
+    if os.path.exists(ruta_origen):
+        # Si ya existe un archivo con el mismo nombre en destino, lo eliminamos
+        if os.path.exists(ruta_final):
+            os.remove(ruta_final)
+        
+        shutil.move(ruta_origen, ruta_final)
+        print(f"Archivo movido a: {ruta_final}")
+    else:
+        print(f"No se encontró el archivo a mover en {ruta_origen}")
+    
+    print("-" * 50)
 
 
 #%%

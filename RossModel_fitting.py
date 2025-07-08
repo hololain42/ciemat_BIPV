@@ -1,13 +1,12 @@
 #%%
 
 from Filter import *
+from exportar_dataframe import mover_archivo
 import numpy as np
-from datetime import time
 import pvlib
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from scipy import stats
-from scipy.stats import gaussian_kde
 from matplotlib.colors import LinearSegmentedColormap
 
 #%%
@@ -536,6 +535,9 @@ with pd.ExcelWriter(nombre_archivo_resultados, engine='xlsxwriter') as writer:
 print("-" * 50)
 print(f"[INFO] Archivo Excel con los resultados guardado como '{nombre_archivo_resultados}'.")
 
+# Movemos el archivo al directorio adecuado
+mover_archivo(nombre_archivo_resultados, "Excel Resultados/NOCT")
+
 
 
 ##### =============================== #####
@@ -716,7 +718,7 @@ fig_terra.show()
 # FIGURAS DENSIDAD DE PUNTOS HEXAGONALES
 # ======================================
 # Crear colormap según la densidad (blanco -> azul -> rojo)
-colors = ['white', 'lightblue', 'blue', 'orange', 'red', 'darkred']
+colors = ['yellow', 'lightblue', 'blue', 'orange', 'red', 'darkred']
 n_bins = 256
 cmap_custom = LinearSegmentedColormap.from_list('density', colors, N=n_bins)
 
@@ -836,12 +838,7 @@ print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
 
 mostrar_tiempo_total()
 
-# TODO: Corregir irradiancia células calibradas G = U/(F1 * (1+0.0005*(T-25ºC))
-# TODO: Comparar irradiancia corregida con la normal 
-
 # TODO: Cargar xlsx ya filtrado y usar eso en el RossModel_fitting (cuidado porque habrá que poner filtros de NaN y datos vacíos)
-
-# TODO: Función para crear estructura de carpetas (/figuras/, /Resultados/, y meter los excel ahí directamente)
 
 # TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?
 # TODO: hay mucha diferencia (delta T grande) pronto por la mañana... ¿por qué? representar Delta T para ver esto

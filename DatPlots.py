@@ -2,7 +2,7 @@
 
 from Data import *
 from submuestreo import Submuestreo, tiempo_submuestreo
-from exportar_dataframe import combinar_dataframes_con_fechas_distintas
+from exportar_dataframe import combinar_dataframes_con_fechas_distintas, mover_archivo
 import threading
 
 # Intervalo de tiempo para la gráfica (en horas)
@@ -911,5 +911,8 @@ nombre_archivo_submuestreado = f"Datos_SIN_FILTRAR_Datalogger_DAQ970A_Inic_{fech
 
 # Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
 archivo_datalogger_submuestrado = combinar_dataframes_con_fechas_distintas(Antracita_submuestreo, Green_submuestreo, Terracota_submuestreo, nombre_archivo_submuestreado)
+
+# Movemos el archivo al directorio adecuado
+mover_archivo(nombre_archivo_submuestreado, "Excel Resultados/Datos Submuestreados")
 
 # %%

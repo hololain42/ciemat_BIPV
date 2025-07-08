@@ -2,7 +2,7 @@
 
 from DatPlots import *
 from submuestreo import Submuestreo, tiempo_submuestreo
-from exportar_dataframe import combinar_dataframes_con_fechas_distintas
+from exportar_dataframe import combinar_dataframes_con_fechas_distintas, mover_archivo
 from datetime import time
 
 #%%
@@ -204,6 +204,8 @@ nombre_archivo_filtrado = f"Datos_filtrados_Datalogger_DAQ970A_Inic_{fecha_solst
 # Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
 archivo_datalogger_filtrado = combinar_dataframes_con_fechas_distintas(Antracita_filtered, Green_filtered, Terracota_filtered, nombre_archivo_filtrado)
 
+# Movemos el archivo al directorio adecuado
+mover_archivo(nombre_archivo_filtrado, "Excel Resultados/Datos Submuestreados")
 
 # %%
 
