@@ -182,6 +182,12 @@ print(f"[INFO] Todos los filtros aplicados")
 print("-" * 50)
 
 
+# Conteo del número de datos, para comparar la actuación de los filtros
+print(f"-Datos de Antracita tras los filtros: {len(Antracita_filtered):,} filas")
+print(f"-Datos de Green tras los filtros: {len(Green_filtered):,} filas")
+print(f"-Datos de Terracota tras los filtros: {len(Terracota_filtered):,} filas")
+print("-" * 50)
+
 #%%
 
 # Informamos de que comienza el submuestreo
@@ -196,6 +202,12 @@ DataFrame_Irradiancia_Submuestreado = Submuestreo(DataFrame_Irradiancia)
 
 # Informamos de que el submuestreo ha sido terminado
 print(f"[INFO] Submuestreo completado, los datos se han agrupado cada {tiempo_submuestreo} minutos.")
+print("-" * 50)
+
+# Conteo del número de datos, para comparar la actuación de los filtros
+print(f"-Datos de Antracita filtrados y submuestrados: {len(Antracita_filtered):,} filas")
+print(f"-Datos de Green filtrados y submuestrados: {len(Green_filtered):,} filas")
+print(f"-Datos de Terracota filtrados y submuestrados: {len(Terracota_filtered):,} filas")
 print("-" * 50)
 
 # Volcamos todos los datos submuestrados y filtrados a un archivo antes de aplicarle cualquier filtro

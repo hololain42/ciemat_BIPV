@@ -893,6 +893,14 @@ Terracota["Temp (C) Celula Calibrada Abajo"] = Temp_CelulaCalibrada_Abajo
 Terracota["Temp (C) Ambiente"] = Temp_Ambiente
 Terracota.set_index('Datetime', inplace=True)
 
+
+# Conteo del número de datos, para comparar la actuación de los filtros
+print(f"-Datos de Antracita iniciales: {len(Antracita):,} filas")
+print(f"-Datos de Green iniciales: {len(Green):,} filas")
+print(f"-Datos de Terracota iniciales: {len(Terracota):,} filas")
+print("-" * 50)
+
+
 # Informamos de que comienza el submuestreo
 print(f"[INFO] Comienza el submuestreo de datos SIN FILTRAR, se agruparán los datos cada {tiempo_submuestreo} minutos.")
 print("-" * 50)
