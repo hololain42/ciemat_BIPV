@@ -17,7 +17,6 @@ def filtro_corriente_serie(df):
     # Creamos una copia del DataFrame original y añadimos la columna 'filtrar' para determinar qué datos concretos
     # deben ser filtradas en el filtro general (filtro_DataLogger)
     df_filtrado = df.copy()
-    df_filtrado['filtrar'] = False
 
     # Extraemos la hora del índice del DataFrame (datetime)
     if 'hora_dia' not in df_filtrado.columns:
@@ -193,14 +192,25 @@ def filtrar_irradiancias_similares(df, tolerancia, umbral_minimo, G_1='Celula Ca
 def filtro_DataLogger(df, name):
 
     df_filtrado = df.copy()
-    df_filtrado = filtro_corriente_serie(df_filtrado)
-    df_filtrado = filtro_temperatura(df_filtrado)
-    df_filtrado = filtro_desconexiones(df_filtrado, name)
-    df_filtrado = filtro_nulos(df_filtrado)
-    df_filtrado = filtro_AC_DC(df_filtrado)
-    df_filtrado = filtrar_irradiancias_similares(df_filtrado, tolerancia=0.05, umbral_minimo=20)
+    df_filtrado['filtrar'] = False
 
-    #df_filtrado.loc[df_filtrado["filtrar"] == True, :] = np.nan
+    # Ejecutamos los filtros en un orden específico
+    # 1. FILTROS DE VALIDACIÓN (eliminan datos claramente inválidos)
+    df_filtrado = filtro_nulos(df_filtrado)  # Elimina NaN/None
+    df_filtrado = filtro_temperatura(df_filtrado)  # Elimina temperaturas físicamente imposibles
+
+    # 2. FILTRO DE IRRADIANCIA, que las irradiancias de las células sean similares
+    df_filtrado = filtrar_irradiancias_similares(df_filtrado, tolerancia=0.05, umbral_minimo=20)
+    
+    # 3. FILTRO DE MEDIDAS ELÉCTRICAS
+    df_filtrado = filtro_corriente_serie(df_filtrado)
+
+    # 4. FILTRO DE DETECCIÓN DE ANOMALÍAS en el conexionado eléctrico
+    df_filtrado = filtro_desconexiones(df_filtrado, name)
+
+    # 5. FILTRO DE EFICIENCIA MÍNIMA/MÁXIMA
+    df_filtrado = filtro_AC_DC(df_filtrado)
+
     df_filtrado = df_filtrado[~df_filtrado["filtrar"]].drop(columns=["filtrar"])
     # con df_filtrado[~df_filtrado["filtrar"]], solo conservamos las filas donde ~filtrar = True (~ es operador NOT)
     # Es decir, nos quedamos con las filas donde filtrar = False (las medidas que son buenas)
