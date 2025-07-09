@@ -149,6 +149,46 @@ def filtro_nulos(df):
     return df_filtrado
 
 
+def filtrar_irradiancias_similares(df, tolerancia, umbral_minimo, G_1='Celula Calibrada Arriba', 
+                                   G_2='Celula Calibrada Abajo', G_3='Celula Calibrada Izquierda'):
+    
+    """
+    Filtra filas donde la diferencia entre el máximo y mínimo valor es menor al % de tolerancia
+    Se hace así porque calcula min y max una sola vez y usa esos valores como referencia, no una columna concreta, ya que si la
+    diferencia entre el valor máximo y mínimo es ≤ 5-10% del mínimo, entonces todas las diferencias por pares de columnas serán ≤ 5-10%
+    
+    Parámetros:
+    - df: DataFrame de Pandas con los valores de la célula de color concreto
+    - tolerancia: Máxima diferencia posible entre valores de la irradiancia
+    - umbral_minimo (W/m2): Valor mínimo de irradiancia para aplicar el filtro.
+    - G_1, G_2, G_3: Columnas del DataFrame donde se guarda la irradiancia de las tres células calibradas
+    
+    ->Imponemos un umbral mínimo para desechar valores de ruido o erróneos. Además, como estaríamos dividiendo por números pequeños 
+    en el cálculo de las irradiancias similares, puede dar lugar a problemas.
+    
+    """
+
+    df_filtrado = df.copy()
+
+    # Encontrar valores min y max para cada fila de irradiancia
+    valores_irradiancia = df_filtrado[[G_1, G_2, G_3]]
+    min_val_G = valores_irradiancia.min(axis=1)
+    max_val_G = valores_irradiancia.max(axis=1)
+
+    # Condiciones mínimas para aplicar el filtro
+    condiciones_validas = (
+        (min_val_G > 0) &  # Evitar valores negativos
+        (min_val_G >= umbral_minimo)  # Evitar valores muy pequeños que pueden dar problemas al dividir
+    )
+
+    # La diferencia relativa debe ser menor a la tolerancia
+    irradiancias_similares = condiciones_validas & ((max_val_G - min_val_G) / min_val_G > tolerancia)
+
+    df_filtrado.loc[irradiancias_similares | ~condiciones_validas, 'filtrar'] = True
+    
+    return df_filtrado
+
+
 # Función para aplicar todos los filtros
 def filtro_DataLogger(df, name):
 
@@ -158,6 +198,7 @@ def filtro_DataLogger(df, name):
     df_filtrado = filtro_desconexiones(df_filtrado, name)
     df_filtrado = filtro_nulos(df_filtrado)
     df_filtrado = filtro_AC_DC(df_filtrado)
+    df_filtrado = filtrar_irradiancias_similares(df_filtrado, tolerancia=0.05, umbral_minimo=20)
 
     #df_filtrado.loc[df_filtrado["filtrar"] == True, :] = np.nan
     df_filtrado = df_filtrado[~df_filtrado["filtrar"]].drop(columns=["filtrar"])
