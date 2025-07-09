@@ -739,8 +739,8 @@ fig_terra.show()
 # ======================================
 # FIGURAS DENSIDAD DE PUNTOS HEXAGONALES
 # ======================================
-# Crear colormap según la densidad (blanco -> azul -> rojo)
-colors = ['midnightblue', 'navy', 'steelblue', 'orange', 'red', 'darkred']
+# Crear colormap según la densidad (azul suave -> azul oscuro -> amarillo -> rojo -> rojo oscuro)
+colors = ['lightsteelblue', 'cornflowerblue', 'royalblue', 'yellow', 'orange', 'red', 'darkred']
 n_bins = 256
 cmap_custom = LinearSegmentedColormap.from_list('density', colors, N=n_bins)
 
