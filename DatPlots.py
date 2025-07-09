@@ -899,9 +899,9 @@ print("-" * 50)
 
 # Submuestreamos los datos ahora porque queremos volcar todos los datos a un archivo antes de aplicarle cualquier filtro, 
 # para asi tener una referencia y poder compararlos con los datos filtrados
-Antracita_submuestreo = Submuestreo(Antracita)
-Green_submuestreo     = Submuestreo(Green)
-Terracota_submuestreo = Submuestreo(Terracota)
+Antracita_submuestreo_SinFiltro = Submuestreo(Antracita)
+Green_submuestreo_SinFiltro     = Submuestreo(Green)
+Terracota_submuestreo_SinFiltro = Submuestreo(Terracota)
 
 print(f"[INFO] Submuestreo previo sin filtrar completado. Procedemos a exportar el archivo.")
 print("-" * 50)
@@ -910,7 +910,10 @@ print("-" * 50)
 nombre_archivo_submuestreado = f"Datos_SIN_FILTRAR_Datalogger_DAQ970A_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
 
 # Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
-archivo_datalogger_submuestrado = combinar_dataframes_con_fechas_distintas(Antracita_submuestreo, Green_submuestreo, Terracota_submuestreo, nombre_archivo_submuestreado)
+archivo_datalogger_submuestrado = combinar_dataframes_con_fechas_distintas(Antracita_submuestreo_SinFiltro, 
+                                                                           Green_submuestreo_SinFiltro, 
+                                                                           Terracota_submuestreo_SinFiltro, 
+                                                                           nombre_archivo_submuestreado)
 
 # Movemos el archivo al directorio adecuado
 mover_archivo(nombre_archivo_submuestreado, "Excel Resultados/Datos Submuestreados")
