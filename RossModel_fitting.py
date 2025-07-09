@@ -159,8 +159,8 @@ def plot_irradiancia_comparacion(df, df_filtrado):
         plt.grid(True, alpha=0.7)
 
         plt.tight_layout()
-        plt.gcf().savefig('figuras/RossModel_fit/Irradiancia_Exp_vs_Corregida.pdf', bbox_inches='tight')
-        plt.gcf().savefig('figuras/RossModel_fit/png/Irradiancia_Exp_vs_Corregida.png', bbox_inches='tight')
+        plt.gcf().savefig('figuras/RossModel_fit/ALL_Irradiancia_Exp_vs_Corregida.pdf', bbox_inches='tight')
+        plt.gcf().savefig('figuras/RossModel_fit/png/ALL_Irradiancia_Exp_vs_Corregida.png', bbox_inches='tight')
         #plt.show()
 
 
@@ -647,14 +647,14 @@ ax_T_comp_3_cels.legend(loc='best')
 ax_T_comp_3_cels.grid(True, alpha=0.7)
 
 fig_T_comp_3_cels.tight_layout()
-fig_T_comp_3_cels.savefig('figuras/RossModel_fit/ALL_Celulas_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
-fig_T_comp_3_cels.savefig('figuras/RossModel_fit/png/ALL_Celulas_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_T_comp_3_cels.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_ALL_Celulas.pdf', bbox_inches='tight')
+fig_T_comp_3_cels.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_ALL_Celulas.png', bbox_inches='tight')
 fig_T_comp_3_cels.show()
 
 # ====================================
 # FIGURA INDIVIDUAL - ANTRACITA
 # ====================================
-fig_ant = plt.figure(figsize=(8, 6))
+fig_ant = plt.figure(figsize=(10, 6))
 fig_ant.canvas.manager.set_window_title('Antracita - T simulada vs real')
 ax_ant = fig_ant.add_subplot(111)
 ax_ant.set_title("Antracita - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
@@ -675,14 +675,14 @@ ax_ant.legend(loc='best')
 ax_ant.grid(True, alpha=0.7)
 
 fig_ant.tight_layout()
-fig_ant.savefig('figuras/RossModel_fit/Antracita_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
-fig_ant.savefig('figuras/RossModel_fit/png/Antracita_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_ant.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Antracita.pdf', bbox_inches='tight')
+fig_ant.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Antracita.png', bbox_inches='tight')
 fig_ant.show()
 
 # ====================================
 # FIGURA INDIVIDUAL - GREEN
 # ====================================
-fig_green = plt.figure(figsize=(8, 6))
+fig_green = plt.figure(figsize=(10, 6))
 fig_green.canvas.manager.set_window_title('Green - T simulada vs real')
 ax_green_ind = fig_green.add_subplot(111)
 ax_green_ind.set_title("Green - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
@@ -703,14 +703,14 @@ ax_green_ind.legend(loc='best')
 ax_green_ind.grid(True, alpha=0.7)
 
 fig_green.tight_layout()
-fig_green.savefig('figuras/RossModel_fit/Green_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
-fig_green.savefig('figuras/RossModel_fit/png/Green_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_green.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Green.pdf', bbox_inches='tight')
+fig_green.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Green.png', bbox_inches='tight')
 fig_green.show()
 
 # ====================================
 # FIGURA INDIVIDUAL - TERRACOTA
 # ====================================
-fig_terra = plt.figure(figsize=(8, 6))
+fig_terra = plt.figure(figsize=(10, 6))
 fig_terra.canvas.manager.set_window_title('Terracota - T simulada vs real')
 ax_terra_ind = fig_terra.add_subplot(111)
 ax_terra_ind.set_title("Terracota - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
@@ -731,8 +731,8 @@ ax_terra_ind.legend(loc='best')
 ax_terra_ind.grid(True, alpha=0.7)
 
 fig_terra.tight_layout()
-fig_terra.savefig('figuras/RossModel_fit/Terracota_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
-fig_terra.savefig('figuras/RossModel_fit/png/Terracota_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_terra.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Terracota.pdf', bbox_inches='tight')
+fig_terra.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Terracota.png', bbox_inches='tight')
 fig_terra.show()
 
 
@@ -747,7 +747,7 @@ cmap_custom = LinearSegmentedColormap.from_list('density', colors, N=n_bins)
 # ====================================
 # FIGURA DENSIDAD - ANTRACITA (HEX)
 # ====================================
-fig_densidad_hex_ant = plt.figure(figsize=(10, 8))
+fig_densidad_hex_ant = plt.figure(figsize=(10, 6))
 fig_densidad_hex_ant.canvas.manager.set_window_title('Antracita - Densidad de puntos hexagonal')
 ax_densidad_hex_ant = fig_densidad_hex_ant.add_subplot(111)
 
@@ -773,14 +773,14 @@ ax_densidad_hex_ant.legend(loc='best')
 ax_densidad_hex_ant.grid(True, alpha=0.3)
 
 fig_densidad_hex_ant.tight_layout()
-fig_densidad_hex_ant.savefig('figuras/RossModel_fit/Hexbin_Antracita_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
-fig_densidad_hex_ant.savefig('figuras/RossModel_fit/png/Hexbin_Antracita_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_densidad_hex_ant.savefig('figuras/RossModel_fit/Hexbin_Temp_sim_VS_Temp_real_Antracita.pdf', bbox_inches='tight')
+fig_densidad_hex_ant.savefig('figuras/RossModel_fit/png/Hexbin_Temp_sim_VS_Temp_real_Antracita.png', bbox_inches='tight')
 fig_densidad_hex_ant.show()
 
 # ====================================
 # FIGURA DENSIDAD - GREEN (HEX)
 # ====================================
-fig_densidad_hex_green = plt.figure(figsize=(10, 8))
+fig_densidad_hex_green = plt.figure(figsize=(10, 6))
 fig_densidad_hex_green.canvas.manager.set_window_title('Green - Densidad de puntos hexagonal')
 ax_densidad_hex_green = fig_densidad_hex_green.add_subplot(111)
 
@@ -806,14 +806,14 @@ ax_densidad_hex_green.legend(loc='best')
 ax_densidad_hex_green.grid(True, alpha=0.3)
 
 fig_densidad_hex_green.tight_layout()
-fig_densidad_hex_green.savefig('figuras/RossModel_fit/Hexbin_Green_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
-fig_densidad_hex_green.savefig('figuras/RossModel_fit/png/Hexbin_Green_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_densidad_hex_green.savefig('figuras/RossModel_fit/Hexbin_Temp_sim_VS_Temp_real_Green.pdf', bbox_inches='tight')
+fig_densidad_hex_green.savefig('figuras/RossModel_fit/png/Hexbin_Temp_sim_VS_Temp_real_Green.png', bbox_inches='tight')
 fig_densidad_hex_green.show()
 
 # ====================================
 # FIGURA DENSIDAD - TERRACOTA (HEX)
 # ====================================
-fig_densidad_hex_terra = plt.figure(figsize=(10, 8))
+fig_densidad_hex_terra = plt.figure(figsize=(10, 6))
 fig_densidad_hex_terra.canvas.manager.set_window_title('Terracota - Densidad de puntos hexagonal')
 ax_densidad_hex_terra = fig_densidad_hex_terra.add_subplot(111)
 
@@ -839,8 +839,8 @@ ax_densidad_hex_terra.legend(loc='best')
 ax_densidad_hex_terra.grid(True, alpha=0.3)
 
 fig_densidad_hex_terra.tight_layout()
-fig_densidad_hex_terra.savefig('figuras/RossModel_fit/Hexbin_Terracota_Temp_sim_VS_Temp_real.pdf', bbox_inches='tight')
-fig_densidad_hex_terra.savefig('figuras/RossModel_fit/png/Hexbin_Terracota_Temp_sim_VS_Temp_real.png', bbox_inches='tight')
+fig_densidad_hex_terra.savefig('figuras/RossModel_fit/Hexbin_Temp_sim_VS_Temp_real_Terracota.pdf', bbox_inches='tight')
+fig_densidad_hex_terra.savefig('figuras/RossModel_fit/png/Hexbin_Temp_sim_VS_Temp_real_Terracota.png', bbox_inches='tight')
 fig_densidad_hex_terra.show()
 
 
