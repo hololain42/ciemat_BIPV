@@ -249,40 +249,105 @@ Terracota_filtered = filtro_DataLogger(Terracota, "Terracota")
 print(f"[INFO] Todos los filtros aplicados")
 print("-" * 50)
 
-
 # Conteo del número de datos, para comparar la actuación de los filtros
 print(f"-Datos de Antracita tras los filtros: {len(Antracita_filtered):,} filas")
 print(f"-Datos de Green tras los filtros: {len(Green_filtered):,} filas")
 print(f"-Datos de Terracota tras los filtros: {len(Terracota_filtered):,} filas")
 print("-" * 50)
 
+
+def sincronizar_dataframes(*dataframes, datetime_col='Datetime'):
+    """
+    Sincroniza múltiples DataFrames para que tengan exactamente las mismas filas
+    basándose en la columna de datetime y eliminando filas con valores faltantes
+
+    Lo hacemos para asegurarnos de que estamos comparando la producción energética de cada color en completa igualdad de condiciones,
+    es decir, que todas las células tengan el mismo número de datos para comparar, ya que tras el filtro algunas células tienen 
+    más datos y por lo tanto van a sumar más potencia
+
+    """
+
+    # Establecer datetime como índice si no lo es
+    dfs = []
+    for df in dataframes:
+        if datetime_col in df.columns:
+            df_temp = df.set_index(datetime_col)
+        else:
+            df_temp = df.copy()
+        dfs.append(df_temp)
+    
+    # Encontrar índices comunes
+    indices_comunes = dfs[0].index
+    for df in dfs[1:]:
+        indices_comunes = indices_comunes.intersection(df.index)
+    
+    # Filtrar todos los DataFrames
+    dfs_sincronizados = []
+    for df in dfs:
+        df_sync = df.loc[indices_comunes]
+        # Eliminar filas con valores faltantes
+        df_sync = df_sync.dropna()
+        dfs_sincronizados.append(df_sync)
+    
+    # Encontrar los índices finales comunes después de dropna
+    indices_finales = dfs_sincronizados[0].index
+    for df in dfs_sincronizados[1:]:
+        indices_finales = indices_finales.intersection(df.index)
+    
+    # Aplicar filtro final
+    resultado = [df.loc[indices_finales] for df in dfs_sincronizados]
+    
+    return resultado
+
+# Aplicamos la sincronización
+Antracita_filtered_sync, Green_filtered_sync, Terracota_filtered_sync = sincronizar_dataframes(
+    Antracita_filtered, Green_filtered, Terracota_filtered)
+
+# Informamos de que la sincronización se ha llevado a cabo
+print(f"[INFO] Sincronización de DataFrames realizada")
+print("-" * 50)
+
+
+# Verificar que todos tengan el mismo número de filas e índices
+print(f"-Datos de Antracita tras la sincronización: {len(Antracita_filtered_sync):,} filas")
+print(f"-Datos de Green tras la sincronización: {len(Green_filtered_sync):,} filas")
+print(f"-Datos de Terracota tras la sincronización: {len(Terracota_filtered_sync):,} filas")
+
+# Verificar que los índices sean exactamente los mismos
+print(f"-->¿Índices iguales tras la sincronización?: {Antracita_filtered_sync.index.equals(Green_filtered_sync.index) and Green_filtered_sync.index.equals(Terracota_filtered_sync.index)}")
+print("-" * 50)
+
+
 #%%
 
 # Informamos de que comienza el submuestreo
-print(f"[INFO] Comienza el submuestreo de datos filtrados, se agruparán los datos cada {tiempo_submuestreo} minutos.")
+print(f"[INFO] Comienza el submuestreo de datos filtrados y sincronizados, se agruparán los datos cada {tiempo_submuestreo} minutos.")
 print("-" * 50)
 
-Antracita_filtered = Submuestreo(Antracita_filtered)
-Green_filtered     = Submuestreo(Green_filtered)
-Terracota_filtered = Submuestreo(Terracota_filtered)
+Antracita_filtered_sync_Submuestreado = Submuestreo(Antracita_filtered_sync)
+Green_filtered_sync_Submuestreado     = Submuestreo(Green_filtered_sync)
+Terracota_filtered_sync_Submuestreado = Submuestreo(Terracota_filtered_sync)
 
-DataFrame_Irradiancia_Submuestreado = Submuestreo(DataFrame_Irradiancia)
+DataFrame_Irradiancia_Submuestreado   = Submuestreo(DataFrame_Irradiancia)
 
 # Informamos de que el submuestreo ha sido terminado
 print(f"[INFO] Submuestreo completado, los datos se han agrupado cada {tiempo_submuestreo} minutos.")
 print("-" * 50)
 
 # Conteo del número de datos, para comparar la actuación de los filtros
-print(f"-Datos de Antracita filtrados y submuestrados: {len(Antracita_filtered):,} filas")
-print(f"-Datos de Green filtrados y submuestrados: {len(Green_filtered):,} filas")
-print(f"-Datos de Terracota filtrados y submuestrados: {len(Terracota_filtered):,} filas")
+print(f"-Datos de Antracita filtrados y submuestrados: {len(Antracita_filtered_sync_Submuestreado):,} filas")
+print(f"-Datos de Green filtrados y submuestrados: {len(Green_filtered_sync_Submuestreado):,} filas")
+print(f"-Datos de Terracota filtrados y submuestrados: {len(Terracota_filtered_sync_Submuestreado):,} filas")
 print("-" * 50)
 
 # Volcamos todos los datos submuestrados y filtrados a un archivo antes de aplicarle cualquier filtro
 nombre_archivo_filtrado = f"Datos_filtrados_Datalogger_DAQ970A_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
 
 # Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
-archivo_datalogger_filtrado = combinar_dataframes_con_fechas_distintas(Antracita_filtered, Green_filtered, Terracota_filtered, nombre_archivo_filtrado)
+archivo_datalogger_filtrado = combinar_dataframes_con_fechas_distintas(Antracita_filtered_sync_Submuestreado, 
+                                                                       Green_filtered_sync_Submuestreado, 
+                                                                       Terracota_filtered_sync_Submuestreado, 
+                                                                       nombre_archivo_filtrado)
 
 # Movemos el archivo al directorio adecuado
 mover_archivo(nombre_archivo_filtrado, "Excel Resultados/Datos Submuestreados")

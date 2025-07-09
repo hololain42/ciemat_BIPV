@@ -15,7 +15,7 @@ from matplotlib.colors import LinearSegmentedColormap
 print(f"[INFO] Comienza el cálculo del modelo de Ross")
 print("-" * 50)
 
-# Corregimos la irradiancia de la célula en función de la temperatura
+# Corregimos la irradiancia de la célula calibrada en función de la temperatura
 def correccion_irradiancia_celula(G_cel, T_cel):
     """
     Esta función corrige el valor de la irradiancia de la célula en función de su temperatura
@@ -40,10 +40,6 @@ def correccion_irradiancia_celula(G_cel, T_cel):
 ### FILTROS PREVIOS ###
 
 # Para los cálculos del modelo de Ross solo nos quedaremos con los datos que tengan G>400 W/m2 y datos razonables de temperatura ambiente
-# TODO: Decidir si uso los datos del submuestreo o uso todos los datos? -> para lo cual habría que cambiar un par de cosas en Filter.py
-#       (nombres especiales para Antracita_filtered antes del submuestreo, o cambiar los nombres de después)
-
-
 
 # Filtro para irradiancias
 #   El piranómetro de referencia capta la irradiancia global, y esto falsearía los resultados del modelo de Ross porque la irradiancia usada 
@@ -88,7 +84,7 @@ def filtro_irradiancias_400(df):
         valores_validos_antes = df_filtrado[panel].notna().sum()
         valores_bajos = (df_filtrado[panel] < umbral_irradiancia_min).sum()
         
-        print(f"    -[DEBUG] {panel}: De {valores_validos_antes} valores, solo {valores_validos_antes-valores_bajos} superan el umbral de {umbral_irradiancia_min} W/m2")
+        print(f"    -[DEBUG] {panel}: De {(valores_validos_antes):,} valores, solo {(valores_validos_antes-valores_bajos):,} superan el umbral de {umbral_irradiancia_min} W/m2")
         
         # Marcamos valores NaN de forma segura
         irrad_cel_calib_arriba_nan = df_filtrado[panel].isna()
@@ -191,9 +187,9 @@ def filtro_modelo_Ross(df, name):
 
 ##### FILTRADO PARA CADA TIPO DE TECNOLOGÍA DE PANELES SOLARES EN EL TEJADO #####
 
-Antracita_filtered_Ross = filtro_modelo_Ross(Antracita_filtered, "Antracita")
-Green_filtered_Ross     = filtro_modelo_Ross(Green_filtered, "Green")
-Terracota_filtered_Ross = filtro_modelo_Ross(Terracota_filtered, "Terracota")
+Antracita_filtered_sync_Submuestreado_Ross = filtro_modelo_Ross(Antracita_filtered_sync_Submuestreado, "Antracita")
+Green_filtered_sync_Submuestreado_Ross     = filtro_modelo_Ross(Green_filtered_sync_Submuestreado, "Green")
+Terracota_filtered_sync_Submuestreado_Ross = filtro_modelo_Ross(Terracota_filtered_sync_Submuestreado, "Terracota")
 
 # Informamos de los filtros del Modelo de Ross
 print("-" * 50)
@@ -342,9 +338,9 @@ def mean_absolute_error(T_cell_sim, T_cell_real):
 
 ### RESULTADOS NOCT ###
 
-resultados_NOCT_Antracita = modelo_Ross(Antracita_filtered_Ross, "Antracita")
-resultados_NOCT_Green     = modelo_Ross(Green_filtered_Ross, "Green")
-resultados_NOCT_Terracota = modelo_Ross(Terracota_filtered_Ross, "Terracota")
+resultados_NOCT_Antracita = modelo_Ross(Antracita_filtered_sync_Submuestreado_Ross, "Antracita")
+resultados_NOCT_Green     = modelo_Ross(Green_filtered_sync_Submuestreado_Ross, "Green")
+resultados_NOCT_Terracota = modelo_Ross(Terracota_filtered_sync_Submuestreado_Ross, "Terracota")
 
 
 ### Temperaturas simuladas con el NOCT y MBE ###
@@ -373,22 +369,22 @@ for i in range(1, 5):
 
     # Aplicamos la función para simular la temperatura de la célula con el NOCT obtenido
     # y guardamos el resultado en una columna específica
-    Antracita_filtered[temp_sim_celula_col] = simular_temperatura_celula(
-        Antracita_filtered['Celula Calibrada Arriba'],
-        Antracita_filtered['Temp (C) Ambiente'],
+    Antracita_filtered_sync_Submuestreado[temp_sim_celula_col] = simular_temperatura_celula(
+        Antracita_filtered_sync_Submuestreado['Celula Calibrada Arriba'],
+        Antracita_filtered_sync_Submuestreado['Temp (C) Ambiente'],
         resultados_NOCT_Antracita[f'Celula_{i}']['NOCT_eff']
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
     # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
-    Antracita_filtered[delta_temp_celula_col] = Antracita_filtered[temp_sim_celula_col] - Antracita_filtered[temp_celula_col]
+    Antracita_filtered_sync_Submuestreado[delta_temp_celula_col] = Antracita_filtered_sync_Submuestreado[temp_sim_celula_col] - Antracita_filtered_sync_Submuestreado[temp_celula_col]
 
     # Métricas estadísticas de la Antracita
     # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
     # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
     metrics_Antracita[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Antracita_filtered[temp_sim_celula_col], Antracita_filtered[temp_celula_col]),
-        'MAE': mean_absolute_error(Antracita_filtered[temp_sim_celula_col], Antracita_filtered[temp_celula_col])
+        'MBE': mean_bias_error(Antracita_filtered_sync_Submuestreado[temp_sim_celula_col], Antracita_filtered_sync_Submuestreado[temp_celula_col]),
+        'MAE': mean_absolute_error(Antracita_filtered_sync_Submuestreado[temp_sim_celula_col], Antracita_filtered_sync_Submuestreado[temp_celula_col])
     }
 
 print("-" * 50)
@@ -421,22 +417,22 @@ for i in range(1, 5):
 
     # Aplicamos la función para simular la temperatura de la célula con el NOCT obtenido
     # y guardamos el resultado en una columna específica
-    Green_filtered[temp_sim_celula_col] = simular_temperatura_celula(
-        Green_filtered['Celula Calibrada Arriba'],
-        Green_filtered['Temp (C) Ambiente'],
+    Green_filtered_sync_Submuestreado[temp_sim_celula_col] = simular_temperatura_celula(
+        Green_filtered_sync_Submuestreado['Celula Calibrada Arriba'],
+        Green_filtered_sync_Submuestreado['Temp (C) Ambiente'],
         resultados_NOCT_Green[f'Celula_{i}']['NOCT_eff']
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
     # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
-    Green_filtered[delta_temp_celula_col] = Green_filtered[temp_sim_celula_col] - Green_filtered[temp_celula_col]
+    Green_filtered_sync_Submuestreado[delta_temp_celula_col] = Green_filtered_sync_Submuestreado[temp_sim_celula_col] - Green_filtered_sync_Submuestreado[temp_celula_col]
 
     # Métricas estadísticas de la Green
     # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
     # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
     metrics_Green[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Green_filtered[temp_sim_celula_col], Green_filtered[temp_celula_col]),
-        'MAE': mean_absolute_error(Green_filtered[temp_sim_celula_col], Green_filtered[temp_celula_col])
+        'MBE': mean_bias_error(Green_filtered_sync_Submuestreado[temp_sim_celula_col], Green_filtered_sync_Submuestreado[temp_celula_col]),
+        'MAE': mean_absolute_error(Green_filtered_sync_Submuestreado[temp_sim_celula_col], Green_filtered_sync_Submuestreado[temp_celula_col])
     }
 
 print("-" * 50)
@@ -469,22 +465,22 @@ for i in range(1, 5):
 
     # Aplicamos la función para simular la temperatura de la célula con el NOCT obtenido
     # y guardamos el resultado en una columna específica
-    Terracota_filtered[temp_sim_celula_col] = simular_temperatura_celula(
-        Terracota_filtered['Celula Calibrada Arriba'],
-        Terracota_filtered['Temp (C) Ambiente'],
+    Terracota_filtered_sync_Submuestreado[temp_sim_celula_col] = simular_temperatura_celula(
+        Terracota_filtered_sync_Submuestreado['Celula Calibrada Arriba'],
+        Terracota_filtered_sync_Submuestreado['Temp (C) Ambiente'],
         resultados_NOCT_Terracota[f'Celula_{i}']['NOCT_eff']
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
     # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
-    Terracota_filtered[delta_temp_celula_col] = Terracota_filtered[temp_sim_celula_col] - Terracota_filtered[temp_celula_col]
+    Terracota_filtered_sync_Submuestreado[delta_temp_celula_col] = Terracota_filtered_sync_Submuestreado[temp_sim_celula_col] - Terracota_filtered_sync_Submuestreado[temp_celula_col]
 
     # Métricas estadísticas de la Terracota
     # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
     # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
     metrics_Terracota[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Terracota_filtered[temp_sim_celula_col], Terracota_filtered[temp_celula_col]),
-        'MAE': mean_absolute_error(Terracota_filtered[temp_sim_celula_col], Terracota_filtered[temp_celula_col])
+        'MBE': mean_bias_error(Terracota_filtered_sync_Submuestreado[temp_sim_celula_col], Terracota_filtered_sync_Submuestreado[temp_celula_col]),
+        'MAE': mean_absolute_error(Terracota_filtered_sync_Submuestreado[temp_sim_celula_col], Terracota_filtered_sync_Submuestreado[temp_celula_col])
     }
 
 print("-" * 50)
@@ -557,21 +553,21 @@ ax_T_comp_3_cels = fig_T_comp_3_cels.add_subplot(111)
 ax_T_comp_3_cels.set_title("Comparación entre la temperatura simulada con NOCT y la experimental", fontsize=12, fontweight='normal')
 
 # ANTRACITA
-ax_T_comp_3_cels.plot(Antracita_filtered["Temp 1 (C) Antracita"], Antracita_filtered["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Antracita", color= "xkcd:charcoal grey")
-ax_T_comp_3_cels.plot(Antracita_filtered["Temp 2 (C) Antracita"], Antracita_filtered["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
-ax_T_comp_3_cels.plot(Antracita_filtered["Temp 3 (C) Antracita"], Antracita_filtered["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
-ax_T_comp_3_cels.plot(Antracita_filtered["Temp 4 (C) Antracita"], Antracita_filtered["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+ax_T_comp_3_cels.plot(Antracita_filtered_sync_Submuestreado["Temp 1 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Antracita", color= "xkcd:charcoal grey")
+ax_T_comp_3_cels.plot(Antracita_filtered_sync_Submuestreado["Temp 2 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+ax_T_comp_3_cels.plot(Antracita_filtered_sync_Submuestreado["Temp 3 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
+ax_T_comp_3_cels.plot(Antracita_filtered_sync_Submuestreado["Temp 4 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", color= "xkcd:charcoal grey")
 
 # ANTRACITA - Regresión lineal
 # Concatenar todos los datos de Antracita
-x_ant = np.concatenate([Antracita_filtered["Temp 1 (C) Antracita"], 
-                        Antracita_filtered["Temp 2 (C) Antracita"],
-                        Antracita_filtered["Temp 3 (C) Antracita"],
-                        Antracita_filtered["Temp 4 (C) Antracita"]])
-y_ant = np.concatenate([Antracita_filtered["Temp_Sim 1 (C) Antracita"],
-                        Antracita_filtered["Temp_Sim 2 (C) Antracita"],
-                        Antracita_filtered["Temp_Sim 3 (C) Antracita"],
-                        Antracita_filtered["Temp_Sim 4 (C) Antracita"]])
+x_ant = np.concatenate([Antracita_filtered_sync_Submuestreado["Temp 1 (C) Antracita"], 
+                        Antracita_filtered_sync_Submuestreado["Temp 2 (C) Antracita"],
+                        Antracita_filtered_sync_Submuestreado["Temp 3 (C) Antracita"],
+                        Antracita_filtered_sync_Submuestreado["Temp 4 (C) Antracita"]])
+y_ant = np.concatenate([Antracita_filtered_sync_Submuestreado["Temp_Sim 1 (C) Antracita"],
+                        Antracita_filtered_sync_Submuestreado["Temp_Sim 2 (C) Antracita"],
+                        Antracita_filtered_sync_Submuestreado["Temp_Sim 3 (C) Antracita"],
+                        Antracita_filtered_sync_Submuestreado["Temp_Sim 4 (C) Antracita"]])
 
 # Calcular regresión
 slope_ant, intercept_ant, r_value_ant, p_value_ant, std_err_ant = stats.linregress(x_ant, y_ant)
@@ -579,40 +575,40 @@ line_ant = slope_ant * x_ant + intercept_ant
 ax_T_comp_3_cels.plot(x_ant, line_ant, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
 
 # GREEN
-ax_T_comp_3_cels.plot(Green_filtered["Temp 1 (C) Green"], Green_filtered["Temp_Sim 1 (C) Green"], linestyle="", marker= ".", label= "Green", color= "xkcd:leaf green")
-ax_T_comp_3_cels.plot(Green_filtered["Temp 2 (C) Green"], Green_filtered["Temp_Sim 2 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
-ax_T_comp_3_cels.plot(Green_filtered["Temp 3 (C) Green"], Green_filtered["Temp_Sim 3 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
-ax_T_comp_3_cels.plot(Green_filtered["Temp 4 (C) Green"], Green_filtered["Temp_Sim 4 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+ax_T_comp_3_cels.plot(Green_filtered_sync_Submuestreado["Temp 1 (C) Green"], Green_filtered_sync_Submuestreado["Temp_Sim 1 (C) Green"], linestyle="", marker= ".", label= "Green", color= "xkcd:leaf green")
+ax_T_comp_3_cels.plot(Green_filtered_sync_Submuestreado["Temp 2 (C) Green"], Green_filtered_sync_Submuestreado["Temp_Sim 2 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+ax_T_comp_3_cels.plot(Green_filtered_sync_Submuestreado["Temp 3 (C) Green"], Green_filtered_sync_Submuestreado["Temp_Sim 3 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
+ax_T_comp_3_cels.plot(Green_filtered_sync_Submuestreado["Temp 4 (C) Green"], Green_filtered_sync_Submuestreado["Temp_Sim 4 (C) Green"], linestyle="", marker= ".", color= "xkcd:leaf green")
 
 # GREEN - Regresión lineal
-x_green = np.concatenate([Green_filtered["Temp 1 (C) Green"],
-                          Green_filtered["Temp 2 (C) Green"],
-                          Green_filtered["Temp 3 (C) Green"],
-                          Green_filtered["Temp 4 (C) Green"]])
-y_green = np.concatenate([Green_filtered["Temp_Sim 1 (C) Green"],
-                          Green_filtered["Temp_Sim 2 (C) Green"],
-                          Green_filtered["Temp_Sim 3 (C) Green"],
-                          Green_filtered["Temp_Sim 4 (C) Green"]])
+x_green = np.concatenate([Green_filtered_sync_Submuestreado["Temp 1 (C) Green"],
+                          Green_filtered_sync_Submuestreado["Temp 2 (C) Green"],
+                          Green_filtered_sync_Submuestreado["Temp 3 (C) Green"],
+                          Green_filtered_sync_Submuestreado["Temp 4 (C) Green"]])
+y_green = np.concatenate([Green_filtered_sync_Submuestreado["Temp_Sim 1 (C) Green"],
+                          Green_filtered_sync_Submuestreado["Temp_Sim 2 (C) Green"],
+                          Green_filtered_sync_Submuestreado["Temp_Sim 3 (C) Green"],
+                          Green_filtered_sync_Submuestreado["Temp_Sim 4 (C) Green"]])
 
 slope_green, intercept_green, r_value_green, p_value_green, std_err_green = stats.linregress(x_green, y_green)
 line_green = slope_green * x_green + intercept_green
 ax_T_comp_3_cels.plot(x_green, line_green, color="xkcd:irish green", linestyle='-', alpha=0.8, linewidth=2, zorder=3)
 
 # TERRACOTA
-ax_T_comp_3_cels.plot(Terracota_filtered["Temp 1 (C) Terracota"], Terracota_filtered["Temp_Sim 1 (C) Terracota"], linestyle="", marker= ".", label= "Terracota", color= "xkcd:terracotta")
-ax_T_comp_3_cels.plot(Terracota_filtered["Temp 2 (C) Terracota"], Terracota_filtered["Temp_Sim 2 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
-ax_T_comp_3_cels.plot(Terracota_filtered["Temp 3 (C) Terracota"], Terracota_filtered["Temp_Sim 3 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
-ax_T_comp_3_cels.plot(Terracota_filtered["Temp 4 (C) Terracota"], Terracota_filtered["Temp_Sim 4 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+ax_T_comp_3_cels.plot(Terracota_filtered_sync_Submuestreado["Temp 1 (C) Terracota"], Terracota_filtered_sync_Submuestreado["Temp_Sim 1 (C) Terracota"], linestyle="", marker= ".", label= "Terracota", color= "xkcd:terracotta")
+ax_T_comp_3_cels.plot(Terracota_filtered_sync_Submuestreado["Temp 2 (C) Terracota"], Terracota_filtered_sync_Submuestreado["Temp_Sim 2 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+ax_T_comp_3_cels.plot(Terracota_filtered_sync_Submuestreado["Temp 3 (C) Terracota"], Terracota_filtered_sync_Submuestreado["Temp_Sim 3 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
+ax_T_comp_3_cels.plot(Terracota_filtered_sync_Submuestreado["Temp 4 (C) Terracota"], Terracota_filtered_sync_Submuestreado["Temp_Sim 4 (C) Terracota"], linestyle="", marker= ".", color= "xkcd:terracotta")
 
 # TERRACOTA - Regresión lineal
-x_terra = np.concatenate([Terracota_filtered["Temp 1 (C) Terracota"],
-                          Terracota_filtered["Temp 2 (C) Terracota"],
-                          Terracota_filtered["Temp 3 (C) Terracota"],
-                          Terracota_filtered["Temp 4 (C) Terracota"]])
-y_terra = np.concatenate([Terracota_filtered["Temp_Sim 1 (C) Terracota"],
-                          Terracota_filtered["Temp_Sim 2 (C) Terracota"],
-                          Terracota_filtered["Temp_Sim 3 (C) Terracota"],
-                          Terracota_filtered["Temp_Sim 4 (C) Terracota"]])
+x_terra = np.concatenate([Terracota_filtered_sync_Submuestreado["Temp 1 (C) Terracota"],
+                          Terracota_filtered_sync_Submuestreado["Temp 2 (C) Terracota"],
+                          Terracota_filtered_sync_Submuestreado["Temp 3 (C) Terracota"],
+                          Terracota_filtered_sync_Submuestreado["Temp 4 (C) Terracota"]])
+y_terra = np.concatenate([Terracota_filtered_sync_Submuestreado["Temp_Sim 1 (C) Terracota"],
+                          Terracota_filtered_sync_Submuestreado["Temp_Sim 2 (C) Terracota"],
+                          Terracota_filtered_sync_Submuestreado["Temp_Sim 3 (C) Terracota"],
+                          Terracota_filtered_sync_Submuestreado["Temp_Sim 4 (C) Terracota"]])
 
 slope_terra, intercept_terra, r_value_terra, p_value_terra, std_err_terra = stats.linregress(x_terra, y_terra)
 line_terra = slope_terra * x_terra + intercept_terra
@@ -638,10 +634,10 @@ ax_ant = fig_ant.add_subplot(111)
 ax_ant.set_title("Antracita - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
 
 # Plot datos
-ax_ant.plot(Antracita_filtered["Temp 1 (C) Antracita"], Antracita_filtered["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:charcoal grey")
-ax_ant.plot(Antracita_filtered["Temp 2 (C) Antracita"], Antracita_filtered["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:dark grey")
-ax_ant.plot(Antracita_filtered["Temp 3 (C) Antracita"], Antracita_filtered["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:grey")
-ax_ant.plot(Antracita_filtered["Temp 4 (C) Antracita"], Antracita_filtered["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:light grey")
+ax_ant.plot(Antracita_filtered_sync_Submuestreado["Temp 1 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:charcoal grey")
+ax_ant.plot(Antracita_filtered_sync_Submuestreado["Temp 2 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:dark grey")
+ax_ant.plot(Antracita_filtered_sync_Submuestreado["Temp 3 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:grey")
+ax_ant.plot(Antracita_filtered_sync_Submuestreado["Temp 4 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:light grey")
 
 # Regresión lineal
 ax_ant.plot(x_ant, line_ant, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3, 
@@ -666,10 +662,10 @@ ax_green_ind = fig_green.add_subplot(111)
 ax_green_ind.set_title("Green - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
 
 # Plot datos
-ax_green_ind.plot(Green_filtered["Temp 1 (C) Green"], Green_filtered["Temp_Sim 1 (C) Green"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:leaf green")
-ax_green_ind.plot(Green_filtered["Temp 2 (C) Green"], Green_filtered["Temp_Sim 2 (C) Green"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:forest green")
-ax_green_ind.plot(Green_filtered["Temp 3 (C) Green"], Green_filtered["Temp_Sim 3 (C) Green"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:green")
-ax_green_ind.plot(Green_filtered["Temp 4 (C) Green"], Green_filtered["Temp_Sim 4 (C) Green"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:lime green")
+ax_green_ind.plot(Green_filtered_sync_Submuestreado["Temp 1 (C) Green"], Green_filtered_sync_Submuestreado["Temp_Sim 1 (C) Green"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:leaf green")
+ax_green_ind.plot(Green_filtered_sync_Submuestreado["Temp 2 (C) Green"], Green_filtered_sync_Submuestreado["Temp_Sim 2 (C) Green"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:forest green")
+ax_green_ind.plot(Green_filtered_sync_Submuestreado["Temp 3 (C) Green"], Green_filtered_sync_Submuestreado["Temp_Sim 3 (C) Green"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:green")
+ax_green_ind.plot(Green_filtered_sync_Submuestreado["Temp 4 (C) Green"], Green_filtered_sync_Submuestreado["Temp_Sim 4 (C) Green"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:lime green")
 
 # Regresión lineal
 ax_green_ind.plot(x_green, line_green, color="xkcd:irish green", linestyle='-', alpha=0.8, linewidth=2, zorder=3,
@@ -694,10 +690,10 @@ ax_terra_ind = fig_terra.add_subplot(111)
 ax_terra_ind.set_title("Terracota - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
 
 # Plot datos
-ax_terra_ind.plot(Terracota_filtered["Temp 1 (C) Terracota"], Terracota_filtered["Temp_Sim 1 (C) Terracota"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:terracotta")
-ax_terra_ind.plot(Terracota_filtered["Temp 2 (C) Terracota"], Terracota_filtered["Temp_Sim 2 (C) Terracota"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:burnt orange")
-ax_terra_ind.plot(Terracota_filtered["Temp 3 (C) Terracota"], Terracota_filtered["Temp_Sim 3 (C) Terracota"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:orange")
-ax_terra_ind.plot(Terracota_filtered["Temp 4 (C) Terracota"], Terracota_filtered["Temp_Sim 4 (C) Terracota"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:peach")
+ax_terra_ind.plot(Terracota_filtered_sync_Submuestreado["Temp 1 (C) Terracota"], Terracota_filtered_sync_Submuestreado["Temp_Sim 1 (C) Terracota"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:terracotta")
+ax_terra_ind.plot(Terracota_filtered_sync_Submuestreado["Temp 2 (C) Terracota"], Terracota_filtered_sync_Submuestreado["Temp_Sim 2 (C) Terracota"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:burnt orange")
+ax_terra_ind.plot(Terracota_filtered_sync_Submuestreado["Temp 3 (C) Terracota"], Terracota_filtered_sync_Submuestreado["Temp_Sim 3 (C) Terracota"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:orange")
+ax_terra_ind.plot(Terracota_filtered_sync_Submuestreado["Temp 4 (C) Terracota"], Terracota_filtered_sync_Submuestreado["Temp_Sim 4 (C) Terracota"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:peach")
 
 # Regresión lineal
 ax_terra_ind.plot(x_terra, line_terra, color="xkcd:tangerine", linestyle='-', alpha=0.8, linewidth=2, zorder=3,
