@@ -4,6 +4,7 @@ from Filter import *
 from exportar_dataframe import mover_archivo
 import numpy as np
 import pvlib
+import math
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from scipy import stats
@@ -301,7 +302,7 @@ def simular_temperatura_celula(G_cel_arriba, T_ambiente, NOCT):
 
 
 # Función para calcular el Mean Bias Error (MBE) entre los valores calculados de T_cell y los medidos realmente
-def mean_bias_error(T_cell_sim, T_cell_real):
+def mean_bias_error_NOCT(T_cell_sim, T_cell_real):
     '''
     Parámetros:
         T_cell_sim (numeric): Serie de pandas de los valores simulados con el NOCT calculado
@@ -319,7 +320,7 @@ def mean_bias_error(T_cell_sim, T_cell_real):
 
 
 # Función para calcular el Mean Absolute Error (MAE) entre los valores calculados de T_cell y los medidos realmente
-def mean_absolute_error(T_cell_sim, T_cell_real):
+def mean_absolute_error_NOCT(T_cell_sim, T_cell_real):
     '''
     Parámetros:
         T_cell_sim (numeric): Serie de pandas de los valores simulados con el NOCT calculado
@@ -334,6 +335,24 @@ def mean_absolute_error(T_cell_sim, T_cell_real):
     mae = diff.mean()
 
     return mae
+
+
+# Función para calcular el Root Mean Square Error (RMSE) entre los valores calculados de T_cell y los medidos realmente
+def root_mean_square_error_NOCT(T_cell_sim, T_cell_real):
+    '''
+    Parámetros:
+        T_cell_sim (numeric): Serie de pandas de los valores simulados con el NOCT calculado
+        T_cell_real (numeric): Serie de pandas de las temperaturas medidas experimentalmente
+
+    Devuelve:
+        rmse (float): root mean square error
+    '''
+
+    # Raíz cuadrada del segundo momento de la muestra de las diferencias entre los valores previstos y los valores observados
+    diff_cuad = (T_cell_sim - T_cell_real)**2
+    rmse = math.sqrt(diff_cuad.mean())
+
+    return rmse
 
 
 ### RESULTADOS NOCT ###
@@ -383,8 +402,9 @@ for i in range(1, 5):
     # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
     # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
     metrics_Antracita[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Antracita_filtered_sync_Submuestreado[temp_sim_celula_col], Antracita_filtered_sync_Submuestreado[temp_celula_col]),
-        'MAE': mean_absolute_error(Antracita_filtered_sync_Submuestreado[temp_sim_celula_col], Antracita_filtered_sync_Submuestreado[temp_celula_col])
+        'MBE': mean_bias_error_NOCT(Antracita_filtered_sync_Submuestreado[temp_sim_celula_col], Antracita_filtered_sync_Submuestreado[temp_celula_col]),
+        'MAE': mean_absolute_error_NOCT(Antracita_filtered_sync_Submuestreado[temp_sim_celula_col], Antracita_filtered_sync_Submuestreado[temp_celula_col]),
+        'RMSE': root_mean_square_error_NOCT(Antracita_filtered_sync_Submuestreado[temp_sim_celula_col], Antracita_filtered_sync_Submuestreado[temp_celula_col])
     }
 
 print("-" * 50)
@@ -396,6 +416,7 @@ for celula, resultado in metrics_Antracita.items():
     print(f"- Célula {numero_celula}:")
     print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
     print(f"    - MAE (ºC) = {resultado['MAE']:.2f}")
+    print(f"    - RMSE (ºC) = {resultado['RMSE']:.2f}")
 
 
     #################
@@ -431,8 +452,9 @@ for i in range(1, 5):
     # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
     # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
     metrics_Green[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Green_filtered_sync_Submuestreado[temp_sim_celula_col], Green_filtered_sync_Submuestreado[temp_celula_col]),
-        'MAE': mean_absolute_error(Green_filtered_sync_Submuestreado[temp_sim_celula_col], Green_filtered_sync_Submuestreado[temp_celula_col])
+        'MBE': mean_bias_error_NOCT(Green_filtered_sync_Submuestreado[temp_sim_celula_col], Green_filtered_sync_Submuestreado[temp_celula_col]),
+        'MAE': mean_absolute_error_NOCT(Green_filtered_sync_Submuestreado[temp_sim_celula_col], Green_filtered_sync_Submuestreado[temp_celula_col]),
+        'RMSE': root_mean_square_error_NOCT(Green_filtered_sync_Submuestreado[temp_sim_celula_col], Green_filtered_sync_Submuestreado[temp_celula_col])
     }
 
 print("-" * 50)
@@ -444,6 +466,7 @@ for celula, resultado in metrics_Green.items():
     print(f"- Célula {numero_celula}:")
     print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
     print(f"    - MAE (ºC) = {resultado['MAE']:.2f}")
+    print(f"    - RMSE (ºC) = {resultado['RMSE']:.2f}")
 
 
     #################
@@ -479,8 +502,9 @@ for i in range(1, 5):
     # Calculamos el Mean Bias Error y Mean Absolute Error de esa columna 
     # (lo hago con la función en vez de con .mean() directamente por si en algún momento cambio algo)
     metrics_Terracota[f"Celula_{i}"] = {
-        'MBE': mean_bias_error(Terracota_filtered_sync_Submuestreado[temp_sim_celula_col], Terracota_filtered_sync_Submuestreado[temp_celula_col]),
-        'MAE': mean_absolute_error(Terracota_filtered_sync_Submuestreado[temp_sim_celula_col], Terracota_filtered_sync_Submuestreado[temp_celula_col])
+        'MBE': mean_bias_error_NOCT(Terracota_filtered_sync_Submuestreado[temp_sim_celula_col], Terracota_filtered_sync_Submuestreado[temp_celula_col]),
+        'MAE': mean_absolute_error_NOCT(Terracota_filtered_sync_Submuestreado[temp_sim_celula_col], Terracota_filtered_sync_Submuestreado[temp_celula_col]),
+        'RMSE': root_mean_square_error_NOCT(Terracota_filtered_sync_Submuestreado[temp_sim_celula_col], Terracota_filtered_sync_Submuestreado[temp_celula_col])
     }
 
 print("-" * 50)
@@ -492,6 +516,7 @@ for celula, resultado in metrics_Terracota.items():
     print(f"- Célula {numero_celula}:")
     print(f"    - MBE (ºC) = {resultado['MBE']:.2f}")
     print(f"    - MAE (ºC) = {resultado['MAE']:.2f}")
+    print(f"    - RMSE (ºC) = {resultado['RMSE']:.2f}")
 
 
 def construir_dataframe_resultados(tipo_celula, resultados_NOCT, metrics):
@@ -501,10 +526,11 @@ def construir_dataframe_resultados(tipo_celula, resultados_NOCT, metrics):
     fila_R2_NOCT = [round(resultados_NOCT[celula]['R2'], 4) for celula in resultados_NOCT]
     fila_MBE     = [round(metrics[celula]['MBE'], 2) for celula in resultados_NOCT]
     fila_MAE     = [round(metrics[celula]['MAE'], 2) for celula in resultados_NOCT]
+    fila_RMSE    = [round(metrics[celula]['RMSE'], 2) for celula in resultados_NOCT]
 
     df = pd.DataFrame(
-        [fila_NOCT, fila_R2_NOCT, fila_MBE, fila_MAE],
-        index=["NOCT (ºC)", "R2_NOCT", "MBE (ºC)", "MAE (ºC)"],
+        [fila_NOCT, fila_R2_NOCT, fila_MBE, fila_MAE, fila_RMSE],
+        index=["NOCT (ºC)", "R2_NOCT", "MBE (ºC)", "MAE (ºC)", "RMSE(ºC)"],
         columns=columnas
     )
 
@@ -714,7 +740,7 @@ fig_terra.show()
 # FIGURAS DENSIDAD DE PUNTOS HEXAGONALES
 # ======================================
 # Crear colormap según la densidad (blanco -> azul -> rojo)
-colors = ['yellow', 'lightblue', 'blue', 'orange', 'red', 'darkred']
+colors = ['midnightblue', 'navy', 'steelblue', 'orange', 'red', 'darkred']
 n_bins = 256
 cmap_custom = LinearSegmentedColormap.from_list('density', colors, N=n_bins)
 
@@ -834,7 +860,6 @@ print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
 
 mostrar_tiempo_total()
 
-# TODO: Cargar xlsx ya filtrado y usar eso en el RossModel_fitting (cuidado porque habrá que poner filtros de NaN y datos vacíos)
 
 # TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?
 # TODO: hay mucha diferencia (delta T grande) pronto por la mañana... ¿por qué? representar Delta T para ver esto
