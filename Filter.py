@@ -188,6 +188,20 @@ def filtrar_irradiancias_similares(df, tolerancia, umbral_minimo, G_1='Celula Ca
     return df_filtrado
 
 
+def filtro_quitar_huecos(df):
+
+    """
+    Aplicar este filtro si se quiere quitar todas las filas en las que haya algun valor vacío.
+    """
+
+    df_filtrado = df.copy()
+
+    # Eliminar filas que tengan cualquier valor faltante
+    df_filtrado = df_filtrado.dropna(how='any') 
+
+    return df_filtrado
+
+
 # Función para aplicar todos los filtros
 def filtro_DataLogger(df, name):
 
@@ -218,6 +232,9 @@ def filtro_DataLogger(df, name):
     # Eliminamos columnas auxiliares
     columnas_temporales = [col for col in df_filtrado.columns if any( term in col for term in ['delta_', 'voltaje_medio', 'voltaje_std', 'Eficiencia'])]
     df_filtrado = df_filtrado.drop(columns=columnas_temporales)
+
+    # Por último, quitamos todas las filas con huecos que puedan haber quedado
+    filtro_quitar_huecos(df_filtrado)
 
     return df_filtrado
 
