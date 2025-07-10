@@ -845,20 +845,17 @@ fig_densidad_hex_terra.show()
 
 
 # Imprimir estadísticas de las regresiones lineales
-print("-" * 50)
-print(f"Antracita - Total puntos: {len(x_ant)}")
+
+print(f"Antracita Ross - Total puntos: {len(x_ant)}")
 print(f"Antracita: R² = {r_value_ant**2:.3f}, pendiente = {slope_ant:.3f}")
 
-print(f"Green - Total puntos: {len(x_green)}")
+print(f"Green Ross - Total puntos: {len(x_green)}")
 print(f"Green: R² = {r_value_green**2:.3f}, pendiente = {slope_green:.3f}")
 
-print(f"Terracota - Total puntos: {len(x_terra)}")
+print(f"Terracota Ross - Total puntos: {len(x_terra)}")
 print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
+print("-" * 50)
 
-
-
-
-mostrar_tiempo_total()
 
 
 # TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?

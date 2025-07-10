@@ -15,6 +15,10 @@ Por simplicidad, vamos a considerar la media de la TONC de cada color y la tempe
 
 """
 
+# Informamos de que empiezan los cálculos de la potencia
+print(f"[INFO] Comienza el cálculo de la potencia y la producción energética")
+print("-" * 50)
+
 ##################
 ### CONSTANTES ###
 ##################
@@ -47,7 +51,7 @@ def calculo_potencia(df, resultados_NOCT, inicio_rango, final_rango, tipo_celula
     # la media será considerando solo las otras 3 células
     TONC_mean = np.mean([resultados_NOCT[f'Celula_{i}']['NOCT_eff'] for i in range(inicio_rango, final_rango)])
     
-    print(f"TONC promedio de {tipo_celula}: {TONC_mean:.2f}")
+    print(f"-TONC promedio de {tipo_celula}: {TONC_mean:.2f} (ºC)")
 
     # Nombre de la columna de la temperatura simulada con el NOCT PROMEDIO
     columna_temp_sim_celula_con_NOCT_mean = f"Temp_Sim_con_NOCT_promedio (C) {tipo_celula}"
@@ -209,6 +213,8 @@ for nombre, df_celula_potencia in dataframes_celulas_potencia.items():
 
     diff_rel_potencia = (potencia_DC_sim_total-potencia_DC_exp_total)/abs(potencia_DC_exp_total)*100
 
+    potencia_DC_exp_media = df_celula_potencia[columna_potencia_exp_DC_celula].mean()
+
     # Energía total (suma de los valores y multiplicada por el tiempo de submuestreo, pasada a kWh
     produccion_energetica_exp = to_kWh(potencia_DC_exp_total*tiempo_submuestreo)
     produccion_energetica_sim = to_kWh(potencia_DC_sim_total*tiempo_submuestreo)
@@ -219,6 +225,7 @@ for nombre, df_celula_potencia in dataframes_celulas_potencia.items():
         'P_exp': potencia_DC_exp_total,
         'P_sim': potencia_DC_sim_total,
         'diff_rel_Potencia': diff_rel_potencia,
+        'mean_P_exp': potencia_DC_exp_media,
         'MBE': mean_bias_error_prod(df_celula_potencia[columna_potencia_sim_DC_celula], df_celula_potencia[columna_potencia_exp_DC_celula], normalized = False),
         'nMBE': mean_bias_error_prod(df_celula_potencia[columna_potencia_sim_DC_celula], df_celula_potencia[columna_potencia_exp_DC_celula], normalized = True),
         'MAE': mean_absolute_error_prod(df_celula_potencia[columna_potencia_sim_DC_celula], df_celula_potencia[columna_potencia_exp_DC_celula]),
@@ -239,6 +246,7 @@ for tipo_celula, resultado in resultados_potencia_celulas.items():
     print(f"    - Potencia experimental (W) = {resultado['P_exp']:.2f}")
     print(f"    - Potencia simulada (W) = {resultado['P_sim']:.2f}")
     print(f"    - Diferencia relativa Potencias = {resultado['diff_rel_Potencia']:.2f}%")
+    print(f"    - Valor medio experimental (W) = {resultado['mean_P_exp']:.2f}")
     print(f"  - MÉTRICAS POTENCIA:")
     print(f"    - MBE (W) = {resultado['MBE']:.2f}")
     print(f"    - nMBE = {resultado['nMBE']:.2f}%")
@@ -249,6 +257,8 @@ for tipo_celula, resultado in resultados_potencia_celulas.items():
     print(f"    - Energía experimental (kWh) = {resultado['Prod_Energia_exp']:.2f}")
     print(f"    - Energía simulada (kWh) = {resultado['Prod_Energia_sim']:.2f}")
     print(f"    - Diferencia relativa Energía = {resultado['diff_rel_Energia']:.2f}%")
+
+print("-" * 50)
 
 
 # ======================================
@@ -357,6 +367,18 @@ fig_terra_P.tight_layout()
 fig_terra_P.savefig('figuras/Produccion_anual/Pot_sim_VS_Pot_real_Terracota.pdf', bbox_inches='tight')
 fig_terra_P.savefig('figuras/Produccion_anual/png/Pot_sim_VS_Pot_real_Terracota.png', bbox_inches='tight')
 fig_terra_P.show()
+
+
+# Imprimir estadísticas de las regresiones lineales
+print(f"Antracita Potencia - Total puntos: {len(x_ant_P)}")
+print(f"Antracita: R² = {r_value_ant_P**2:.3f}, pendiente = {slope_ant_P:.3f}")
+
+print(f"Green Potencia - Total puntos: {len(x_green_P)}")
+print(f"Green: R² = {r_value_green_P**2:.3f}, pendiente = {slope_green_P:.3f}")
+
+print(f"Terracota Potencia - Total puntos: {len(x_terra_P)}")
+print(f"Terracota: R² = {r_value_terra_P**2:.3f}, pendiente = {slope_terra_P:.3f}")
+print("-" * 50)
 
 
 # ====================================
