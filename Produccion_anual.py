@@ -251,6 +251,113 @@ for tipo_celula, resultado in resultados_potencia_celulas.items():
     print(f"    - Diferencia relativa Energía = {resultado['diff_rel_Energia']:.2f}%")
 
 
+# ======================================
+# FIGURA INDIVIDUAL POTENCIA - ANTRACITA
+# ======================================
+
+# ANTRACITA - Regresión lineal
+# Concatenar todos los datos de Antracita
+x_ant_P = Antracita_df_potencia["Potencia entrada (W) Antracita"]
+y_ant_P = Antracita_df_potencia["Potencia DC simulada (W) Antracita"]
+
+# Calcular regresión
+slope_ant_P, intercept_ant_P, r_value_ant_P, p_value_ant_P, std_err_ant_P = stats.linregress(x_ant_P, y_ant_P)
+line_ant_P = slope_ant_P * x_ant_P + intercept_ant_P
+
+fig_ant_P = plt.figure(figsize=(10, 6))
+fig_ant_P.canvas.manager.set_window_title('Antracita - Potencia simulada vs real')
+ax_ant_P = fig_ant_P.add_subplot(111)
+ax_ant_P.set_title("Antracita - Potencia simulada vs experimental", fontsize=12, fontweight='normal')
+
+# Plot datos
+ax_ant_P.plot(Antracita_df_potencia["Potencia entrada (W) Antracita"], Antracita_df_potencia["Potencia DC simulada (W) Antracita"], linestyle="", marker= ".", label= "Antracita", color= "xkcd:charcoal grey")
+
+# Regresión lineal
+ax_ant_P.plot(x_ant_P, line_ant_P, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3, 
+           label=f'R²={r_value_ant_P**2:.3f}')
+
+ax_ant_P.set_xlabel('Potencia experimental (W)')
+ax_ant_P.set_ylabel('Potencia simulada (W)')
+ax_ant_P.legend(loc='best')
+ax_ant_P.grid(True, alpha=0.7)
+
+fig_ant_P.tight_layout()
+fig_ant_P.savefig('figuras/Produccion_anual/Pot_sim_VS_Pot_real_Antracita.pdf', bbox_inches='tight')
+fig_ant_P.savefig('figuras/Produccion_anual/png/Pot_sim_VS_Pot_real_Antracita.png', bbox_inches='tight')
+fig_ant_P.show()
+
+
+# ==================================
+# FIGURA INDIVIDUAL POTENCIA - GREEN
+# ==================================
+
+# GREEN - Regresión lineal
+# Concatenar todos los datos de Green
+x_green_P = Green_df_potencia["Potencia entrada (W) Green"]
+y_green_P = Green_df_potencia["Potencia DC simulada (W) Green"]
+
+# Calcular regresión
+slope_green_P, intercept_green_P, r_value_green_P, p_value_green_P, std_err_green_P = stats.linregress(x_green_P, y_green_P)
+line_green_P = slope_green_P * x_green_P + intercept_green_P
+
+fig_green_P = plt.figure(figsize=(10, 6))
+fig_green_P.canvas.manager.set_window_title('Green - Potencia simulada vs real')
+ax_green_P = fig_green_P.add_subplot(111)
+ax_green_P.set_title("Green - Potencia simulada vs experimental", fontsize=12, fontweight='normal')
+
+# Plot datos
+ax_green_P.plot(Green_df_potencia["Potencia entrada (W) Green"], Green_df_potencia["Potencia DC simulada (W) Green"], linestyle="", marker= ".", label= "Green", color= "xkcd:leaf green")
+
+# Regresión lineal
+ax_green_P.plot(x_green_P, line_green_P, color="xkcd:irish green", linestyle='-', alpha=0.8, linewidth=2, zorder=3, 
+           label=f'R²={r_value_green_P**2:.3f}')
+
+ax_green_P.set_xlabel('Potencia experimental (W)')
+ax_green_P.set_ylabel('Potencia simulada (W)')
+ax_green_P.legend(loc='best')
+ax_green_P.grid(True, alpha=0.7)
+
+fig_green_P.tight_layout()
+fig_green_P.savefig('figuras/Produccion_anual/Pot_sim_VS_Pot_real_Green.pdf', bbox_inches='tight')
+fig_green_P.savefig('figuras/Produccion_anual/png/Pot_sim_VS_Pot_real_Green.png', bbox_inches='tight')
+fig_green_P.show()
+
+
+# ======================================
+# FIGURA INDIVIDUAL POTENCIA - TERRACOTA
+# ======================================
+
+# TERRACOTA - Regresión lineal
+# Datos de Terracota
+x_terra_P = Terracota_df_potencia["Potencia entrada (W) Terracota"]
+y_terra_P = Terracota_df_potencia["Potencia DC simulada (W) Terracota"]
+
+# Calcular regresión
+slope_terra_P, intercept_terra_P, r_value_terra_P, p_value_terra_P, std_err_terra_P = stats.linregress(x_terra_P, y_terra_P)
+line_terra_P = slope_terra_P * x_terra_P + intercept_terra_P
+
+fig_terra_P = plt.figure(figsize=(10, 6))
+fig_terra_P.canvas.manager.set_window_title('Terracota - Potencia simulada vs real')
+ax_terra_P = fig_terra_P.add_subplot(111)
+ax_terra_P.set_title("Terracota - Potencia simulada vs experimental", fontsize=12, fontweight='normal')
+
+# Plot datos
+ax_terra_P.plot(Terracota_df_potencia["Potencia entrada (W) Terracota"], Terracota_df_potencia["Potencia DC simulada (W) Terracota"], linestyle="", marker= ".", label= "Terracota", color= "xkcd:terracotta")
+
+# Regresión lineal
+ax_terra_P.plot(x_terra_P, line_terra_P, color="xkcd:tangerine", linestyle='-', alpha=0.8, linewidth=2, zorder=3, 
+           label=f'R²={r_value_terra_P**2:.3f}')
+
+ax_terra_P.set_xlabel('Potencia experimental (W)')
+ax_terra_P.set_ylabel('Potencia simulada (W)')
+ax_terra_P.legend(loc='best')
+ax_terra_P.grid(True, alpha=0.7)
+
+fig_terra_P.tight_layout()
+fig_terra_P.savefig('figuras/Produccion_anual/Pot_sim_VS_Pot_real_Terracota.pdf', bbox_inches='tight')
+fig_terra_P.savefig('figuras/Produccion_anual/png/Pot_sim_VS_Pot_real_Terracota.png', bbox_inches='tight')
+fig_terra_P.show()
+
 
 mostrar_tiempo_total()
 
