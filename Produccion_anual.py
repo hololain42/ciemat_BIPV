@@ -359,10 +359,74 @@ fig_terra_P.savefig('figuras/Produccion_anual/png/Pot_sim_VS_Pot_real_Terracota.
 fig_terra_P.show()
 
 
+# ====================================
+# HISTOGRAMA DE POTENCIAS EXP. vs SIM.
+# ====================================
+
+# Extraer datos para el histograma y convertir a kW
+celulas = ['Antracita', 'Green', 'Terracota']
+P_exp = [resultados_potencia_celulas[celula]['P_exp'] / 1000 for celula in celulas]  # Convertir a kW
+P_sim = [resultados_potencia_celulas[celula]['P_sim'] / 1000 for celula in celulas]  # Convertir a kW
+
+# Configuración del gráfico
+x = np.arange(len(celulas) * 2)  # Posiciones en el eje X (doble para cada par)
+width = 0.35  # Ancho de las barras
+
+# Crear la figura y el eje
+fig_hist_P = plt.figure(figsize=(10, 6))
+fig_hist_P.canvas.manager.set_window_title('Histograma de potencias según colores')
+ax_hist_P = fig_hist_P.add_subplot(111)
+ax_hist_P.set_title('Comparación de Potencia Experimental vs Simulada por colores', fontsize=12, fontweight='normal')
+
+# Colores para cada célula (tonos diferentes)
+colores_exp = ['xkcd:charcoal grey', 'xkcd:irish green', 'xkcd:terracotta']  
+colores_sim = ['xkcd:steel grey', 'xkcd:leaf green', 'xkcd:tangerine']  
+
+# Crear las barras con posiciones agrupadas por pares
+# Crear listas con todos los valores intercalados
+all_values = []
+all_colors = []
+all_labels = []
+
+for i, celula in enumerate(celulas):
+    all_values.extend([P_exp[i], P_sim[i]])
+    all_colors.extend([colores_exp[i], colores_sim[i]])
+    all_labels.extend([f'{celula} exp.', f'{celula} sim.'])
+
+# Posiciones para las barras - agrupadas por pares
+positions = []
+for i in range(len(celulas)):
+    positions.extend([i * 3, i * 3 + 0.8])  # Pares pegados con separación entre grupos
+
+# Crear las barras
+bars_hist_P = ax_hist_P.bar(positions, all_values, width=0.7, color=all_colors, alpha=0.8)
+
+# Personalizar el gráfico
+ax_hist_P.set_xlabel('Color', fontsize=12)
+ax_hist_P.set_ylabel('Potencia (kW)', fontsize=12)
+ax_hist_P.set_xticks(positions)
+ax_hist_P.set_xticklabels(all_labels, rotation=45, ha='right')
+
+# Fijar ylim para que quepa el texto encima de las barras
+max_value = max(all_values)
+ax_hist_P.set_ylim(0, max_value * 1.15)  # 15% más alto que el valor máximo
+
+# Añadir valores encima de las barras
+for bar in bars_hist_P:
+    height = bar.get_height()
+    ax_hist_P.text(bar.get_x() + bar.get_width()/2., height + max_value * 0.01,
+            f'{height:.1f}', ha='center', va='bottom', fontsize=9)
+
+# Ajustar el layout para evitar que se corten las etiquetas
+fig_hist_P.tight_layout()
+fig_hist_P.savefig('figuras/Produccion_anual/Hist_Pot_sim_VS_Pot_real.pdf', bbox_inches='tight')
+fig_hist_P.savefig('figuras/Produccion_anual/png/Hist_Pot_sim_VS_Pot_real.png', bbox_inches='tight')
+# Mostrar el gráfico
+fig_hist_P.show()
+
 mostrar_tiempo_total()
 
 
-# TODO: Histograma de potencias
 # TODO: Histograma de irradiancias cuando las 3 están iluminadas, para ver un poco el rango de irradiancias que reciben.
 
 
