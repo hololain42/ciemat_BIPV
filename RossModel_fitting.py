@@ -312,7 +312,7 @@ def mean_bias_error_NOCT(T_cell_sim, T_cell_real):
         mbe (float): mean bias error
     '''
 
-    # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
+    # Definido como "simulado - real" para que el signo sea coherente con el resto de la investigación
     diff = (T_cell_sim - T_cell_real)
     mbe = diff.mean()
 
@@ -395,7 +395,7 @@ for i in range(1, 5):
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
-    # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
+    # Definido como "simulado - real" para que el signo sea coherente con el resto de la investigación
     Antracita_filtered_sync_Submuestreado[delta_temp_celula_col] = Antracita_filtered_sync_Submuestreado[temp_sim_celula_col] - Antracita_filtered_sync_Submuestreado[temp_celula_col]
 
     # Métricas estadísticas de la Antracita
@@ -445,7 +445,7 @@ for i in range(1, 5):
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
-    # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
+    # Definido como "simulado - real" para que el signo sea coherente con el resto de la investigación
     Green_filtered_sync_Submuestreado[delta_temp_celula_col] = Green_filtered_sync_Submuestreado[temp_sim_celula_col] - Green_filtered_sync_Submuestreado[temp_celula_col]
 
     # Métricas estadísticas de la Green
@@ -495,7 +495,7 @@ for i in range(1, 5):
     )
 
     # Creamos una columna específica para la diferencia entre temperatura real y la simulada con el NOCT
-    # Definido como "simulado - real" por motivos de signo (que sea coherente con el resto de la investigación)
+    # Definido como "simulado - real" para que el signo sea coherente con el resto de la investigación
     Terracota_filtered_sync_Submuestreado[delta_temp_celula_col] = Terracota_filtered_sync_Submuestreado[temp_sim_celula_col] - Terracota_filtered_sync_Submuestreado[temp_celula_col]
 
     # Métricas estadísticas de la Terracota
@@ -654,37 +654,37 @@ fig_T_comp_3_cels.show()
 # ====================================
 # FIGURA INDIVIDUAL - ANTRACITA
 # ====================================
-fig_ant = plt.figure(figsize=(10, 6))
-fig_ant.canvas.manager.set_window_title('Antracita - T simulada vs real')
-ax_ant = fig_ant.add_subplot(111)
-ax_ant.set_title("Antracita - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
+fig_ant_ind = plt.figure(figsize=(10, 6))
+fig_ant_ind.canvas.manager.set_window_title('Antracita - T simulada vs real')
+ax_ant_ind = fig_ant_ind.add_subplot(111)
+ax_ant_ind.set_title("Antracita - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
 
 # Plot datos
-ax_ant.plot(Antracita_filtered_sync_Submuestreado["Temp 1 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:charcoal grey")
-ax_ant.plot(Antracita_filtered_sync_Submuestreado["Temp 2 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:dark grey")
-ax_ant.plot(Antracita_filtered_sync_Submuestreado["Temp 3 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:grey")
-ax_ant.plot(Antracita_filtered_sync_Submuestreado["Temp 4 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:light grey")
+ax_ant_ind.plot(Antracita_filtered_sync_Submuestreado["Temp 1 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 1 (C) Antracita"], linestyle="", marker= ".", label= "Célula 1", color= "xkcd:charcoal grey")
+ax_ant_ind.plot(Antracita_filtered_sync_Submuestreado["Temp 2 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 2 (C) Antracita"], linestyle="", marker= ".", label= "Célula 2", color= "xkcd:dark grey")
+ax_ant_ind.plot(Antracita_filtered_sync_Submuestreado["Temp 3 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 3 (C) Antracita"], linestyle="", marker= ".", label= "Célula 3", color= "xkcd:grey")
+ax_ant_ind.plot(Antracita_filtered_sync_Submuestreado["Temp 4 (C) Antracita"], Antracita_filtered_sync_Submuestreado["Temp_Sim 4 (C) Antracita"], linestyle="", marker= ".", label= "Célula 4", color= "xkcd:light grey")
 
 # Regresión lineal
-ax_ant.plot(x_ant, line_ant, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3, 
+ax_ant_ind.plot(x_ant, line_ant, color="xkcd:steel grey", linestyle='-', alpha=0.8, linewidth=2, zorder=3, 
            label=f'R²={r_value_ant**2:.3f}')
 
-ax_ant.set_xlabel('Temperatura experimental (ºC)')
-ax_ant.set_ylabel('Temperatura simulada (ºC)')
-ax_ant.legend(loc='best')
-ax_ant.grid(True, alpha=0.7)
+ax_ant_ind.set_xlabel('Temperatura experimental (ºC)')
+ax_ant_ind.set_ylabel('Temperatura simulada (ºC)')
+ax_ant_ind.legend(loc='best')
+ax_ant_ind.grid(True, alpha=0.7)
 
-fig_ant.tight_layout()
-fig_ant.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Antracita.pdf', bbox_inches='tight')
-fig_ant.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Antracita.png', bbox_inches='tight')
-fig_ant.show()
+fig_ant_ind.tight_layout()
+fig_ant_ind.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Antracita.pdf', bbox_inches='tight')
+fig_ant_ind.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Antracita.png', bbox_inches='tight')
+fig_ant_ind.show()
 
 # ====================================
 # FIGURA INDIVIDUAL - GREEN
 # ====================================
-fig_green = plt.figure(figsize=(10, 6))
-fig_green.canvas.manager.set_window_title('Green - T simulada vs real')
-ax_green_ind = fig_green.add_subplot(111)
+fig_green_ind = plt.figure(figsize=(10, 6))
+fig_green_ind.canvas.manager.set_window_title('Green - T simulada vs real')
+ax_green_ind = fig_green_ind.add_subplot(111)
 ax_green_ind.set_title("Green - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
 
 # Plot datos
@@ -702,17 +702,17 @@ ax_green_ind.set_ylabel('Temperatura simulada (ºC)')
 ax_green_ind.legend(loc='best')
 ax_green_ind.grid(True, alpha=0.7)
 
-fig_green.tight_layout()
-fig_green.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Green.pdf', bbox_inches='tight')
-fig_green.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Green.png', bbox_inches='tight')
-fig_green.show()
+fig_green_ind.tight_layout()
+fig_green_ind.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Green.pdf', bbox_inches='tight')
+fig_green_ind.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Green.png', bbox_inches='tight')
+fig_green_ind.show()
 
 # ====================================
 # FIGURA INDIVIDUAL - TERRACOTA
 # ====================================
-fig_terra = plt.figure(figsize=(10, 6))
-fig_terra.canvas.manager.set_window_title('Terracota - T simulada vs real')
-ax_terra_ind = fig_terra.add_subplot(111)
+fig_terra_ind = plt.figure(figsize=(10, 6))
+fig_terra_ind.canvas.manager.set_window_title('Terracota - T simulada vs real')
+ax_terra_ind = fig_terra_ind.add_subplot(111)
 ax_terra_ind.set_title("Terracota - Temperatura simulada vs experimental", fontsize=12, fontweight='normal')
 
 # Plot datos
@@ -730,10 +730,10 @@ ax_terra_ind.set_ylabel('Temperatura simulada (ºC)')
 ax_terra_ind.legend(loc='best')
 ax_terra_ind.grid(True, alpha=0.7)
 
-fig_terra.tight_layout()
-fig_terra.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Terracota.pdf', bbox_inches='tight')
-fig_terra.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Terracota.png', bbox_inches='tight')
-fig_terra.show()
+fig_terra_ind.tight_layout()
+fig_terra_ind.savefig('figuras/RossModel_fit/Temp_sim_VS_Temp_real_Terracota.pdf', bbox_inches='tight')
+fig_terra_ind.savefig('figuras/RossModel_fit/png/Temp_sim_VS_Temp_real_Terracota.png', bbox_inches='tight')
+fig_terra_ind.show()
 
 
 # ======================================
