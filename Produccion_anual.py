@@ -13,35 +13,11 @@ potencia simulada a partir de la experimental y teniendo en cuenta la TONC calcu
 
 Por simplicidad, vamos a considerar la media de la TONC de cada color y la temperatura experimental media de los módulos.
 
-
 """
+
 ##################
 ### CONSTANTES ###
 ##################
-
-# TONC promedio:
-# Para la TONC de la Green, la medida de la célula 1 se desvía del resto al estar más ventilada, por lo que 
-# la media será considerando solo las otras 3 células
-
-TONC_antra_mean = (resultados_NOCT_Antracita[f'Celula_1']['NOCT_eff']
-                 + resultados_NOCT_Antracita[f'Celula_2']['NOCT_eff']
-                 + resultados_NOCT_Antracita[f'Celula_3']['NOCT_eff']
-                 + resultados_NOCT_Antracita[f'Celula_4']['NOCT_eff'])/4
-
-print(TONC_antra_mean)
-
-TONC_green_mean = (resultados_NOCT_Green[f'Celula_2']['NOCT_eff']
-                 + resultados_NOCT_Green[f'Celula_3']['NOCT_eff']
-                 + resultados_NOCT_Green[f'Celula_4']['NOCT_eff'])/3
-
-print(TONC_green_mean)
-
-TONC_terra_mean = (resultados_NOCT_Terracota[f'Celula_1']['NOCT_eff']
-                 + resultados_NOCT_Terracota[f'Celula_2']['NOCT_eff']
-                 + resultados_NOCT_Terracota[f'Celula_3']['NOCT_eff']
-                 + resultados_NOCT_Terracota[f'Celula_4']['NOCT_eff'])/4
-
-print(TONC_terra_mean)
 
 # Coeficientes de potencia [%/ºC]. Cogemos los medidos por ERTEX con los módulos.
 
@@ -66,9 +42,12 @@ def calculo_potencia(df, resultados_NOCT, inicio_rango, final_rango, tipo_celula
     # Hacemos el promedio de la temperatura experimental de los módulos (axis = 1 opera por filas)
     df_calculos[f'Temp (C) media {tipo_celula}'] = df_calculos[columnas_temp_celula].mean(axis=1)
 
+    # TONC promedio:
+    # Para la TONC de la Green, la medida de la célula 1 se desvía del resto al estar más ventilada, por lo que 
+    # la media será considerando solo las otras 3 células
     TONC_mean = np.mean([resultados_NOCT[f'Celula_{i}']['NOCT_eff'] for i in range(inicio_rango, final_rango)])
     
-    print(f"TONC {tipo_celula}: {TONC_mean}")
+    print(f"TONC promedio de {tipo_celula}: {TONC_mean:.2f}")
 
     # Nombre de la columna de la temperatura simulada con el NOCT PROMEDIO
     columna_temp_sim_celula_con_NOCT_mean = f"Temp_Sim_con_NOCT_promedio (C) {tipo_celula}"
@@ -82,7 +61,7 @@ def calculo_potencia(df, resultados_NOCT, inicio_rango, final_rango, tipo_celula
         )
 
     ### DELTA T
-    # Nombre de la columna Delta_T (T_cell_exp_prom - T_cell_sim_NOCT_prom) de la célula
+    # Nombre de la columna Delta_T (T_cell_sim_NOCT_prom - T_cell_exp_prom) de la célula
     columna_delta_temp_celula_mean = f"Delta_T_promedios (C) {tipo_celula}"
 
     df_calculos[columna_delta_temp_celula_mean] = df_calculos[columna_temp_sim_celula_con_NOCT_mean] - df_calculos[f'Temp (C) media {tipo_celula}']
@@ -90,36 +69,196 @@ def calculo_potencia(df, resultados_NOCT, inicio_rango, final_rango, tipo_celula
     ### POTENCIA DC
     columna_potencia_sim_DC_celula = f"Potencia DC simulada (W) {tipo_celula}"
 
-    df_calculos[columna_potencia_sim_DC_celula] = df_calculos[columna_potencia_exp_DC_celula] * (1 - gamma_pot * df_calculos[columna_delta_temp_celula_mean])
+    df_calculos[columna_potencia_sim_DC_celula] = df_calculos[columna_potencia_exp_DC_celula] * (1 - abs(gamma_pot/100) * df_calculos[columna_delta_temp_celula_mean])
 
-    potencia_DC_total = df_calculos[columna_potencia_sim_DC_celula].sum()
+    return df_calculos
 
-    return potencia_DC_total
 
+###################
+### ESTADÍSTICA ###
+###################
+
+# Función para calcular el Mean Bias Error (MBE) entre los valores calculados de Potencia_cell y los medidos realmente
+def mean_bias_error_prod(P_cell_sim, P_cell_real, normalized):
+    '''
+    Parámetros:
+        P_cell_sim (numeric): Serie de pandas de los valores de potencia simulados con el NOCT promedio
+        P_cell_real (numeric): Serie de pandas de las potencias medidas experimentalmente
+        normalized (boolean): Parámetro para indicar si queremos realizar el cálculo del MBE o del nMBE
+
+    Devuelve:
+        mbe (float): mean bias error
+    '''
+
+    # Definido como "simulado - real" para que el signo sea coherente con el resto de la investigación
+    diff = (P_cell_sim - P_cell_real)
+
+    if normalized == False:
+        # Devuelve el MBE como tal
+        mbe = diff.mean()
+
+    else:
+        # Devuelve el normalized MBE, que es un porcentaje (%)
+        m_prom = P_cell_real.mean()
+        mbe = (1/m_prom)*(diff.sum()/(len(diff)-1))*100
+
+    return mbe
+
+
+# Función para calcular el Mean Absolute Error (MAE) entre los valores calculados de Potencia_cell y los medidos realmente
+def mean_absolute_error_prod(P_cell_sim, P_cell_real):
+    '''
+    Parámetros:
+        T_cell_sim (numeric): Serie de pandas de los valores de potencia simulados con el NOCT promedio
+        T_cell_real (numeric): Serie de pandas de las potencias medidas experimentalmente
+
+    Devuelve:
+        mae (float): mean bias error
+    '''
+
+    # Valor absoluto de "simulado - real"
+    diff = abs(P_cell_sim - P_cell_real)
+    mae = diff.mean()
+
+    return mae
+
+
+# Función para calcular el Root Mean Square Error (RMSE) entre los valores calculados de Potencia_cell y los medidos realmente
+def root_mean_square_error_prod(P_cell_sim, P_cell_real, normalized):
+    '''
+    Parámetros:
+        T_cell_sim (numeric): Serie de pandas de los valores simulados con el NOCT calculado
+        T_cell_real (numeric): Serie de pandas de las temperaturas medidas experimentalmente
+
+    Devuelve:
+        rmse (float): root mean square error
+    '''
+
+    # Raíz cuadrada del segundo momento de la muestra de las diferencias entre los valores previstos y los valores observados
+    diff_cuad = (P_cell_sim - P_cell_real)**2
+
+    if normalized == False:
+        # Devuelve el RMSE como tal
+        rmse = math.sqrt(diff_cuad.mean())
+
+    else:
+        # Devuelve el normalized RMSE, que es un porcentaje (%)
+        m_prom = P_cell_real.mean()
+        rmse = (1/m_prom)*math.sqrt(diff_cuad.sum()/(len(diff_cuad)-1))*100
+
+    return rmse
+
+
+def to_kWh(energia_Wmin):
+    '''
+    Convierte la energía (Potencia total * tiempo de submuestreo) de W*min a kWh
+
+    Parámetros:
+        energia_Wmin (float): Valor de la energía total (sumatorio de la columna Potencia*tiempo de submuestreo) en W*min
+
+    Devuelve:
+        energia_kWh (float): Valor de la energía kWh
+    '''
+
+    energia_kWh = energia_Wmin*(1/1000)*(1/60)
+
+    return energia_kWh
 
 
 ### ANTRACITA ###
-potencia_Antracita = calculo_potencia(Antracita_filtered, resultados_NOCT_Antracita, 1, 5, "Antracita",
-                                      gamma_antra, columna_potencia_exp_DC_celula="Potencia entrada (W) Antracita")
+Antracita_df_potencia = calculo_potencia(Antracita_filtered_sync_Submuestreado, resultados_NOCT_Antracita, 1, 5, "Antracita",
+                                         gamma_antra, columna_potencia_exp_DC_celula="Potencia entrada (W) Antracita")
 
 ### GREEN ###
-potencia_Green     = calculo_potencia(Green_filtered, resultados_NOCT_Green, 2, 5, "Green",
-                                      gamma_green, columna_potencia_exp_DC_celula="Potencia entrada (W) Green")
+Green_df_potencia     = calculo_potencia(Green_filtered_sync_Submuestreado, resultados_NOCT_Green, 2, 5, "Green",
+                                         gamma_green, columna_potencia_exp_DC_celula="Potencia entrada (W) Green")
 
 ### TERRACOTA ###
-potencia_Terracota = calculo_potencia(Terracota_filtered, resultados_NOCT_Terracota, 1, 5, "Terracota",
-                                      gamma_terra, columna_potencia_exp_DC_celula="Potencia entrada (W) Terracota")
+Terracota_df_potencia = calculo_potencia(Terracota_filtered_sync_Submuestreado, resultados_NOCT_Terracota, 1, 5, "Terracota",
+                                         gamma_terra, columna_potencia_exp_DC_celula="Potencia entrada (W) Terracota")
 
-print(f"Potencia sim Antracita (W): {potencia_Antracita:.2f}")
-print(f"Potencia exp Antracita (W): {Antracita_filtered["Potencia entrada (W) Antracita"].sum():.2f}")
-print(f"Potencia sim Green (W): {potencia_Green:.2f}")
-print(f"Potencia exp Green (W): {Green_filtered["Potencia entrada (W) Green"].sum():.2f}")
-print(f"Potencia sim Terracota (W): {potencia_Terracota:.2f}")
-print(f"Potencia exp Terracota (W): {Terracota_filtered["Potencia entrada (W) Terracota"].sum():.2f}")
 
+
+resultados_potencia_celulas = {}
+
+# Crear un diccionario que mapee nombres de células a sus DataFrames
+dataframes_celulas_potencia = {
+    "Antracita": Antracita_df_potencia,
+    "Green": Green_df_potencia,
+    "Terracota": Terracota_df_potencia
+}
+
+for nombre, df_celula_potencia in dataframes_celulas_potencia.items():
+
+    # Nombre de la columna de la potencia de la célula experimental
+    columna_potencia_exp_DC_celula = f"Potencia entrada (W) {nombre}"
+
+    # Nombre de la columna de la potencia de la célula simulada con el NOCT promedio
+    columna_potencia_sim_DC_celula = f"Potencia DC simulada (W) {nombre}"
+    
+    # Nombre de la columna Delta_P (P_cell_real-P_cell_sim) de la célula
+    delta_potencia_celula_col = f"Delta_P (W) {nombre}"
+
+    # Creamos una columna específica para la diferencia entre potencia real y la simulada con el NOCT promedio
+    # Definido como "simulado - real" para que el signo sea coherente con el resto de la investigación
+    df_celula_potencia[delta_potencia_celula_col] = df_celula_potencia[columna_potencia_sim_DC_celula] - df_celula_potencia[columna_potencia_exp_DC_celula]
+
+    # Potencia total (suma de todos los valores)
+    potencia_DC_exp_total = df_celula_potencia[columna_potencia_exp_DC_celula].sum()
+    potencia_DC_sim_total = df_celula_potencia[columna_potencia_sim_DC_celula].sum()
+
+    diff_rel_potencia = (potencia_DC_sim_total-potencia_DC_exp_total)/abs(potencia_DC_exp_total)*100
+
+    # Energía total (suma de los valores y multiplicada por el tiempo de submuestreo, pasada a kWh
+    produccion_energetica_exp = to_kWh(potencia_DC_exp_total*tiempo_submuestreo)
+    produccion_energetica_sim = to_kWh(potencia_DC_sim_total*tiempo_submuestreo)
+
+    diff_rel_energia = (produccion_energetica_sim-produccion_energetica_exp)/abs(produccion_energetica_exp)*100
+
+    resultados_potencia_celulas[f"{nombre}"] = {
+        'P_exp': potencia_DC_exp_total,
+        'P_sim': potencia_DC_sim_total,
+        'diff_rel_Potencia': diff_rel_potencia,
+        'MBE': mean_bias_error_prod(df_celula_potencia[columna_potencia_sim_DC_celula], df_celula_potencia[columna_potencia_exp_DC_celula], normalized = False),
+        'nMBE': mean_bias_error_prod(df_celula_potencia[columna_potencia_sim_DC_celula], df_celula_potencia[columna_potencia_exp_DC_celula], normalized = True),
+        'MAE': mean_absolute_error_prod(df_celula_potencia[columna_potencia_sim_DC_celula], df_celula_potencia[columna_potencia_exp_DC_celula]),
+        'RMSE': root_mean_square_error_prod(df_celula_potencia[columna_potencia_sim_DC_celula], df_celula_potencia[columna_potencia_exp_DC_celula], normalized=False),
+        'nRMSE': root_mean_square_error_prod(df_celula_potencia[columna_potencia_sim_DC_celula], df_celula_potencia[columna_potencia_exp_DC_celula], normalized=True),
+        'Prod_Energia_exp': produccion_energetica_exp,
+        'Prod_Energia_sim': produccion_energetica_sim,
+        'diff_rel_Energia': diff_rel_energia
+    }
+
+
+print("-" * 50)
+print("RESULTADOS PRODUCCIÓN ANUAL")
+for tipo_celula, resultado in resultados_potencia_celulas.items():
+
+    print(f"- Células de {tipo_celula}:")
+    print(f"  - POTENCIA:")
+    print(f"    - Potencia experimental (W) = {resultado['P_exp']:.2f}")
+    print(f"    - Potencia simulada (W) = {resultado['P_sim']:.2f}")
+    print(f"    - Diferencia relativa Potencias = {resultado['diff_rel_Potencia']:.2f}%")
+    print(f"  - MÉTRICAS POTENCIA:")
+    print(f"    - MBE (W) = {resultado['MBE']:.2f}")
+    print(f"    - nMBE = {resultado['nMBE']:.2f}%")
+    print(f"    - MAE (W) = {resultado['MAE']:.2f}")
+    print(f"    - RMSE (W) = {resultado['RMSE']:.2f}")
+    print(f"    - nRMSE = {resultado['nRMSE']:.2f}%")
+    print(f"  - ENERGÍA:")
+    print(f"    - Energía experimental (kWh) = {resultado['Prod_Energia_exp']:.2f}")
+    print(f"    - Energía simulada (kWh) = {resultado['Prod_Energia_sim']:.2f}")
+    print(f"    - Diferencia relativa Energía = {resultado['diff_rel_Energia']:.2f}%")
 
 
 
 mostrar_tiempo_total()
+
+
+# TODO: Histograma de potencias
+# TODO: Histograma de irradiancias cuando las 3 están iluminadas, para ver un poco el rango de irradiancias que reciben.
+
+
+
 
 # %%
