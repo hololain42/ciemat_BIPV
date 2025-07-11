@@ -64,7 +64,11 @@ def generar_histograma_irradiacion(df, tiempo_submuestreo, meses, titulo, mostra
     ax.grid(True, alpha=0.3, axis='y')
 
     # Ajustar el rango del eje Y para que empiece en 0
-    ax.set_ylim(0, max(irradiancia_completa) * 1.25)
+    max_val = max(irradiancia_completa)
+    if max_val > 0:
+        ax.set_ylim(0, max_val * 1.25)
+    else:
+        ax.set_ylim(0, 1)
 
     # Opcional: añadir valores sobre las barras
     for i, v in enumerate(irradiancia_completa):
