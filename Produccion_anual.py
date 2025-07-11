@@ -258,7 +258,75 @@ for tipo_celula, resultado in resultados_potencia_celulas.items():
     print(f"    - Energía simulada (kWh) = {resultado['Prod_Energia_sim']:.2f}")
     print(f"    - Diferencia relativa Energía = {resultado['diff_rel_Energia']:.2f}%")
 
+
+def construir_dataframe_resultados_produccion(resultados_potencia_celulas):
+
+    colores = list(resultados_potencia_celulas.keys())
+
+    # Filas de métricas por color
+    fila_P_exp      = [round(resultados_potencia_celulas[color]['P_exp'], 2) for color in colores]
+    fila_P_sim      = [round(resultados_potencia_celulas[color]['P_sim'], 2) for color in colores]
+    fila_diff_P     = [round(resultados_potencia_celulas[color]['diff_rel_Potencia'], 2) for color in colores]
+    fila_mean_P_exp = [round(resultados_potencia_celulas[color]['mean_P_exp'], 2) for color in colores]
+    fila_MBE        = [round(resultados_potencia_celulas[color]['MBE'], 2) for color in colores]
+    fila_nMBE       = [round(resultados_potencia_celulas[color]['nMBE'], 2) for color in colores]
+    fila_MAE        = [round(resultados_potencia_celulas[color]['MAE'], 2) for color in colores]
+    fila_RMSE       = [round(resultados_potencia_celulas[color]['RMSE'], 2) for color in colores]
+    fila_nRMSE      = [round(resultados_potencia_celulas[color]['nRMSE'], 2) for color in colores]
+    fila_Prod_E_exp = [round(resultados_potencia_celulas[color]['Prod_Energia_exp'], 2) for color in colores]
+    fila_Prod_E_sim = [round(resultados_potencia_celulas[color]['Prod_Energia_sim'], 2) for color in colores]
+    fila_diff_E     = [round(resultados_potencia_celulas[color]['diff_rel_Energia'], 2) for color in colores]
+
+    df = pd.DataFrame(
+        [
+            fila_P_exp,
+            fila_P_sim,
+            fila_diff_P,
+            fila_mean_P_exp,
+            fila_MBE,
+            fila_nMBE,
+            fila_MAE,
+            fila_RMSE,
+            fila_nRMSE,
+            fila_Prod_E_exp,
+            fila_Prod_E_sim,
+            fila_diff_E,
+        ],
+        index=[
+            "Potencia exp. (W)",
+            "Potencia sim. (W)",
+            "Diff Rel. Potencia (%)",
+            "Potencia media exp. (W)",
+            "MBE (W)",
+            "nMBE (%)",
+            "MAE (W)",
+            "RMSE (W)",
+            "nRMSE (%)",
+            "Producción E exp. (kWh)",
+            "Producción E sim. (kWh)",
+            "Diff Rel. Energía (%)"
+        ],
+        columns=colores
+    )
+
+    return df
+
+
+# Construimos el DataFrame
+df_resultados_produccion  = construir_dataframe_resultados_produccion(resultados_potencia_celulas)
+
+# Nombre del archivo
+nombre_archivo_produccion = f"Resultados_Produccion_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
+
+# Guardamos en Excel
+with pd.ExcelWriter(nombre_archivo_produccion, engine='xlsxwriter') as writer:
+    df_resultados_produccion.to_excel(writer, sheet_name='Resumen_Produccion', startrow=0)
+
 print("-" * 50)
+print(f"[INFO] Archivo Excel con los resultados de Producción Anual guardado como '{nombre_archivo_produccion}'.")
+
+# Mover al directorio deseado
+mover_archivo(nombre_archivo_produccion, "Excel Resultados/Produccion_anual")
 
 
 # ======================================
@@ -447,11 +515,5 @@ fig_hist_P.savefig('figuras/Produccion_anual/png/Hist_Pot_sim_VS_Pot_real.png', 
 fig_hist_P.show()
 
 mostrar_tiempo_total()
-
-
-# TODO: Histograma de irradiancias cuando las 3 están iluminadas, para ver un poco el rango de irradiancias que reciben.
-
-
-
 
 # %%

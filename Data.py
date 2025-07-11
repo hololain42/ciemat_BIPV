@@ -41,6 +41,7 @@ directorios_necesarios = [
     "Excel Resultados",
     "Excel Resultados/Datos Submuestreados",
     "Excel Resultados/NOCT",
+    "Excel Resultados/Produccion_anual",
     "figuras",
     "figuras/DatPlots",
     "figuras/RossModel_fit",

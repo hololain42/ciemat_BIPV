@@ -481,7 +481,7 @@ for celula, resultado in metrics_Terracota.items():
     print(f"    - RMSE (ºC) = {resultado['RMSE']:.2f}")
 
 
-def construir_dataframe_resultados(tipo_celula, resultados_NOCT, metrics):
+def construir_dataframe_resultados_NOCT(tipo_celula, resultados_NOCT, metrics):
     columnas = [f"Celula {celula.split('_')[1]}" for celula in resultados_NOCT.keys()]
     
     fila_NOCT    = [round(resultados_NOCT[celula]['NOCT_eff'], 2) for celula in resultados_NOCT]
@@ -503,9 +503,9 @@ def construir_dataframe_resultados(tipo_celula, resultados_NOCT, metrics):
 
 
 # Construimos dataframes para cada tecnología
-df_Antracita_excel  = construir_dataframe_resultados("Antracita", resultados_NOCT_Antracita, metrics_Antracita)
-df_Green_excel      = construir_dataframe_resultados("Green", resultados_NOCT_Green, metrics_Green)
-df_Terracota_excel  = construir_dataframe_resultados("Terracota", resultados_NOCT_Terracota, metrics_Terracota)
+df_Antracita_excel  = construir_dataframe_resultados_NOCT("Antracita", resultados_NOCT_Antracita, metrics_Antracita)
+df_Green_excel      = construir_dataframe_resultados_NOCT("Green", resultados_NOCT_Green, metrics_Green)
+df_Terracota_excel  = construir_dataframe_resultados_NOCT("Terracota", resultados_NOCT_Terracota, metrics_Terracota)
 
 # Unimos horizontalmente
 df_resultados_final = pd.concat([df_Antracita_excel, df_Green_excel, df_Terracota_excel], axis=1)
@@ -517,7 +517,7 @@ with pd.ExcelWriter(nombre_archivo_resultados, engine='xlsxwriter') as writer:
     df_resultados_final.to_excel(writer, sheet_name='Resumen', startrow=0, merge_cells=True)
 
 print("-" * 50)
-print(f"[INFO] Archivo Excel con los resultados guardado como '{nombre_archivo_resultados}'.")
+print(f"[INFO] Archivo Excel con los resultados de NOCT guardado como '{nombre_archivo_resultados}'.")
 
 # Movemos el archivo al directorio adecuado
 mover_archivo(nombre_archivo_resultados, "Excel Resultados/NOCT")
