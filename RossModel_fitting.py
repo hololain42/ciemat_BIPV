@@ -37,7 +37,6 @@ def filtro_irradiancias_400(df):
 
     # Búsqueda exacta de la columna, para que no coja también las columnas de temperatura de las células calibradas
     Irradiancias_Cel_Calib_400 = [col for col in df_filtrado.columns if col == 'Celula Calibrada Arriba']
-    Temperatura_Cel_Calib_400  = [col for col in df_filtrado.columns if col == 'Temp (C) Celula Calibrada Arriba']
 
     umbral_irradiancia_min = 400  # W/m2
 
@@ -807,6 +806,116 @@ fig_densidad_hex_terra.savefig('figuras/RossModel_fit/png/Hexbin_Temp_sim_VS_Tem
 fig_densidad_hex_terra.show()
 
 
+# ===============================================
+# HISTOGRAMA DE NOCT AGRUPADO POR TIPOS DE CÉLULA
+# ===============================================
+
+# Extraer datos de los tres diccionarios
+tipos_celula = ['Antracita', 'Green', 'Terracota']
+diccionarios = [resultados_NOCT_Antracita, resultados_NOCT_Green, resultados_NOCT_Terracota]
+
+# Extraer valores NOCT para cada tipo de célula (4 células por tipo)
+datos_NOCT = []
+for diccionario in diccionarios:
+    valores_tipo = []
+    for i in range(1, 5):  # Células 1-4
+        valores_tipo.append(diccionario[f"Celula_{i}"]['NOCT_eff'])
+    datos_NOCT.append(valores_tipo)
+
+# Configuración del gráfico
+fig_hist_NOCT = plt.figure(figsize=(10, 6))
+fig_hist_NOCT.canvas.manager.set_window_title('Histograma de NOCT por color de célula')
+ax_hist_NOCT = fig_hist_NOCT.add_subplot(111)
+ax_hist_NOCT.set_title('NOCT efectivo por color de célula', fontsize=14, fontweight='bold')
+
+# Colores para cada tipo de célula (tonos diferenciados dentro de cada grupo)
+colores_tipos = {
+    'Antracita': ['xkcd:charcoal grey', 'xkcd:dark grey', 'xkcd:grey', 'xkcd:light grey'],
+    'Green': ['xkcd:leaf green', 'xkcd:forest green', 'xkcd:green', 'xkcd:lime green'],
+    'Terracota': ['xkcd:terracotta', 'xkcd:burnt orange', 'xkcd:orange', 'xkcd:peach']
+}
+
+# Configuración de posiciones para barras agrupadas
+n_tipos = len(tipos_celula)
+n_celulas = 4
+width = 0.18  # Ancho de cada barra individual
+group_spacing = 1.2  # Espaciado entre grupos
+
+# Crear posiciones para cada grupo
+positions_grupos = []
+all_values = []
+all_colors = []
+all_labels = []
+
+for i, tipo in enumerate(tipos_celula):
+    # Posición central del grupo
+    group_center = i * (n_celulas * width + group_spacing)
+    
+    # Posiciones individuales dentro del grupo
+    positions_grupo = []
+    for j in range(n_celulas):
+        pos = group_center + j * width - (n_celulas - 1) * width / 2
+        positions_grupo.append(pos)
+        
+        # Agregar datos para esta barra
+        all_values.append(datos_NOCT[i][j])
+        all_colors.append(colores_tipos[tipo][j])
+        all_labels.append(f'{tipo}\nC{j+1}')
+    
+    positions_grupos.extend(positions_grupo)
+
+# Crear las barras
+bars_hist_NOCT = ax_hist_NOCT.bar(positions_grupos, all_values, width=width, 
+                                  color=all_colors, alpha=0.8, edgecolor='black', linewidth=0.5)
+
+# Personalizar el gráfico
+ax_hist_NOCT.set_xlabel('Tipo de Célula', fontsize=12)
+ax_hist_NOCT.set_ylabel('NOCT Efectivo (°C)', fontsize=12)
+
+# Configurar las etiquetas del eje X
+# Posiciones centrales de cada grupo para las etiquetas principales
+group_centers = []
+for i in range(n_tipos):
+    group_center = i * (n_celulas * width + group_spacing)
+    group_centers.append(group_center)
+
+ax_hist_NOCT.set_xticks(group_centers)
+ax_hist_NOCT.set_xticklabels(tipos_celula, fontsize=11, fontweight='bold')
+
+# Añadir etiquetas secundarias para cada célula
+for i, pos in enumerate(positions_grupos):
+    celula_num = (i % n_celulas) + 1
+    ax_hist_NOCT.text(pos, -max(all_values) * 0.05, f'C{celula_num}', 
+                     ha='center', va='top', fontsize=9, rotation=0)
+
+# Fijar ylim para que quepa el texto encima de las barras
+max_value = max(all_values)
+min_value = min(all_values)
+range_value = max_value - min_value
+ax_hist_NOCT.set_ylim(min_value - range_value * 0.2, max_value + range_value * 0.25)
+
+# Añadir valores encima de las barras
+for bar in bars_hist_NOCT:
+    height = bar.get_height()
+    ax_hist_NOCT.text(bar.get_x() + bar.get_width()/2., height + range_value * 0.02,
+                     f'{height:.1f}', ha='center', va='bottom', fontsize=8, fontweight='bold')
+
+# Añadir líneas verticales sutiles para separar grupos
+for i in range(1, n_tipos):
+    separator_pos = group_centers[i] - (n_celulas * width + group_spacing) / 2
+    ax_hist_NOCT.axvline(x=separator_pos, color='gray', linestyle='--', alpha=0.3)
+
+# Añadir una grilla sutil para mejor lectura
+ax_hist_NOCT.grid(True, alpha=0.3, axis='y')
+
+# Ajustar el layout
+fig_hist_NOCT.tight_layout(pad=1.5)
+fig_hist_NOCT.savefig('figuras/RossModel_fit/Hist_NOCT_tipos_celula.pdf', dpi=300)
+fig_hist_NOCT.savefig('figuras/RossModel_fit/png/Hist_NOCT_tipos_celula.png', dpi=300)
+# Mostrar el gráfico
+fig_hist_NOCT.show()
+
+
 # Imprimir estadísticas de las regresiones lineales
 
 print(f"Antracita Ross - Total puntos: {len(x_ant)}")
@@ -819,8 +928,6 @@ print(f"Terracota Ross - Total puntos: {len(x_terra)}")
 print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
 print("-" * 50)
 
-# IMPORTANTÍSIMO
-# TODO: Corregir los datos de irradiancia de las células calibradas, cambiar de sitio la función que corrige
 
 # TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?
 # TODO: hay mucha diferencia (delta T grande) pronto por la mañana... ¿por qué? representar Delta T para ver esto
