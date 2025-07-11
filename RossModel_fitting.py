@@ -823,7 +823,7 @@ for diccionario in diccionarios:
     datos_NOCT.append(valores_tipo)
 
 # Configuración del gráfico
-fig_hist_NOCT = plt.figure(figsize=(10, 6))
+fig_hist_NOCT = plt.figure(figsize=(12, 8))
 fig_hist_NOCT.canvas.manager.set_window_title('Histograma de NOCT por color de célula')
 ax_hist_NOCT = fig_hist_NOCT.add_subplot(111)
 ax_hist_NOCT.set_title('NOCT efectivo por color de célula', fontsize=14, fontweight='bold')
@@ -909,7 +909,7 @@ for i in range(1, n_tipos):
 ax_hist_NOCT.grid(True, alpha=0.3, axis='y')
 
 # Ajustar el layout
-fig_hist_NOCT.tight_layout(pad=1.5)
+fig_hist_NOCT.subplots_adjust(bottom=0.15, top=0.92, left=0.08, right=0.95)
 fig_hist_NOCT.savefig('figuras/RossModel_fit/Hist_NOCT_tipos_celula.pdf', dpi=300)
 fig_hist_NOCT.savefig('figuras/RossModel_fit/png/Hist_NOCT_tipos_celula.png', dpi=300)
 # Mostrar el gráfico
