@@ -47,6 +47,8 @@ directorios_necesarios = [
     "figuras/RossModel_fit/png",
     "figuras/Produccion_anual",
     "figuras/Produccion_anual/png",
+    "figuras/Histogramas_Irradiacion/",
+    "figuras/Histogramas_Irradiacion/png",
 ]
 
 def crear_estructura_directorios():

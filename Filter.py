@@ -3,6 +3,7 @@
 from DatPlots import *
 from submuestreo import Submuestreo, tiempo_submuestreo
 from exportar_dataframe import combinar_dataframes_con_fechas_distintas, mover_archivo
+from histograma_irradiacion import generar_histograma_irradiacion
 from datetime import time
 
 #%%
@@ -351,6 +352,22 @@ archivo_datalogger_filtrado = combinar_dataframes_con_fechas_distintas(Antracita
 
 # Movemos el archivo al directorio adecuado
 mover_archivo(nombre_archivo_filtrado, "Excel Resultados/Datos Submuestreados")
+
+
+### Generamos un histograma con la irradiación FILTRADA Y SINCRONIZADA de la célula de arriba
+
+# Meses (descomentar el del año entero si se tienen suficientes datos)
+# meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun']
+
+titulo = 'Irradiación mensual sobre la célula calibrada de arriba (datos filtrados)'
+mostrar_grafico = False
+
+fig_hist_G_arriba_filtered, valores_hist_G_arriba_filtered = generar_histograma_irradiacion(Antracita_filtered_sync_Submuestreado, tiempo_submuestreo, meses, titulo, mostrar_grafico, col_irradiancia='Celula Calibrada Arriba')
+
+fig_hist_G_arriba_filtered.savefig(f'figuras/Histogramas_Irradiacion/Hist_Irradiacion_CelCalib_Arriba_FILTRADOS_SYNC_{meses[0]}_a_{meses[-1]}_Submuestreo_{tiempo_submuestreo}.pdf', dpi=300, bbox_inches='tight')
+fig_hist_G_arriba_filtered.savefig(f'figuras/Histogramas_Irradiacion/png/Hist_Irradiacion_CelCalib_Arriba_FILTRADOS_SYNC_{meses[0]}_a_{meses[-1]}_Submuestreo_{tiempo_submuestreo}.png', dpi=300, bbox_inches='tight')
+plt.close(fig_hist_G_arriba_filtered)
 
 # %%
 
