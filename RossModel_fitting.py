@@ -16,28 +16,6 @@ from matplotlib.colors import LinearSegmentedColormap
 print(f"[INFO] Comienza el cálculo del modelo de Ross")
 print("-" * 50)
 
-# Corregimos la irradiancia de la célula calibrada en función de la temperatura
-def correccion_irradiancia_celula(G_cel, T_cel):
-    """
-    Esta función corrige el valor de la irradiancia de la célula en función de su temperatura
-        G = U/(F_1 * (1 + 0.0005 * (T_cell - 25ºC)))
-        G en W/m2, U/F_1 es lo que medimos experimentalmente (F_1 = 17153 V/(W/m2))
-        Por tanto, solo hay que dividir G_cel entre el factor (1 + 0.0005 * (T_cell - 25ºC)))
-    
-    Parámetros:
-    G_cel : pandas.DataFrame.column
-        Columna con los datos de irradiancia de la célula calibrada
-    T_cel : pandas.DataFrame.column
-        Columna con los datos de temperatura de la célula calibrada
-    
-    La función devuelve la columna con los valores de irradiancia corregidos
-    """
-
-    G_cel_corr = G_cel / (1 + 0.0005*(T_cel - 25))
-
-    return G_cel_corr
-
-
 ### FILTROS PREVIOS ###
 
 # Para los cálculos del modelo de Ross solo nos quedaremos con los datos que tengan G>400 W/m2 y datos razonables de temperatura ambiente
@@ -65,21 +43,6 @@ def filtro_irradiancias_400(df):
 
     # Procesamos cada panel
     for panel in Irradiancias_Cel_Calib_400:
-
-        # Seleccionamos la columna de temperatura que tenga el panel
-        col_temperatura = Temperatura_Cel_Calib_400[0]
-        
-        # Corregimos la irradiancia de la célula calibrada en función de su temperatura (solo si ambos valores son válidos)
-        mascara_datos_validos = df_filtrado[panel].notna() & df_filtrado[col_temperatura].notna()
-        
-        if mascara_datos_validos.sum() > 0:
-            # Aplicamos corrección por temperatura
-            df_filtrado.loc[mascara_datos_validos, panel] = correccion_irradiancia_celula(
-                df_filtrado.loc[mascara_datos_validos, panel], 
-                df_filtrado.loc[mascara_datos_validos, col_temperatura]
-            )
-        else:
-            print(f"    -[WARNING] No hay datos válidos para aplicar la corrección por temperatura a la célula calibrada")
 
         # Contar valores antes del filtro
         valores_validos_antes = df_filtrado[panel].notna().sum()
@@ -856,7 +819,8 @@ print(f"Terracota Ross - Total puntos: {len(x_terra)}")
 print(f"Terracota: R² = {r_value_terra**2:.3f}, pendiente = {slope_terra:.3f}")
 print("-" * 50)
 
-
+# IMPORTANTÍSIMO
+# TODO: Corregir los datos de irradiancia de las células calibradas, cambiar de sitio la función que corrige
 
 # TODO: las filas del delta T empiezan desde bastante pronto por la mañana, seguro que ya hay 400 W/m2?
 # TODO: hay mucha diferencia (delta T grande) pronto por la mañana... ¿por qué? representar Delta T para ver esto

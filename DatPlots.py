@@ -5,6 +5,8 @@ from submuestreo import Submuestreo, tiempo_submuestreo
 from exportar_dataframe import combinar_dataframes_con_fechas_distintas, mover_archivo
 import threading
 
+#%%
+
 # Intervalo de tiempo para la gráfica (en horas)
 TickInterval = 15
 # Número de registros que vamos a representar en las gráficas
@@ -17,6 +19,28 @@ DataLength = 10000
 # output de pd.to_datetime: 03-06-2025 07:01:13
 
 Date = pd.to_datetime(DataLoggerDataFrame["Date_local"], dayfirst = True)
+
+
+# Corregimos la irradiancia de la células calibradas en función de la temperatura que marquen sus termopares
+def correccion_irradiancia_celula(G_cel, T_cel):
+    """
+    Esta función corrige el valor de la irradiancia de la célula en función de su temperatura
+        G = U/(F_1 * (1 + 0.0005 * (T_cell - 25ºC)))
+        G en W/m2, U/F_1 es lo que medimos experimentalmente (F_1 = 17153 V/(W/m2))
+        Por tanto, solo hay que dividir G_cel entre el factor (1 + 0.0005 * (T_cell - 25ºC)))
+    
+    Parámetros:
+    G_cel : pandas.DataFrame.column
+        Columna con los datos de irradiancia de la célula calibrada
+    T_cel : pandas.DataFrame.column
+        Columna con los datos de temperatura de la célula calibrada
+    
+    La función devuelve la columna con los valores de irradiancia corregidos
+    """
+
+    G_cel_corr = G_cel / (1 + 0.0005*(T_cel - 25))
+
+    return G_cel_corr
 
 
     ### REGISTRO PIRANÓMETRO ###
@@ -38,6 +62,12 @@ IrradianciaCelulaCalibrada_Abajo.loc[IrradianciaCelulaCalibrada_Abajo < 0] = 0
 Temp_Ambiente               = DataLoggerDataFrame["Canal 105-Canal_105_Tambiente_[ºC] "].astype("float64")
 Temp_CelulaCalibrada_Arriba = DataLoggerDataFrame["Canal 308-Canal_308_TG2_arriba_[ºC] "].astype("float64")
 Temp_CelulaCalibrada_Abajo  = DataLoggerDataFrame["Canal 307-Canal_307_TG1_abajo_[ºC] "].astype("float64")
+
+# Aplicamos la corrección por temperatura a la irradiancia de las células calibradas
+# No tenemos la temperatura de la célula de la izquierda, así que hago una media entre las otras dos
+IrradianciaCelulaCalibrada_Izquierda = correccion_irradiancia_celula(IrradianciaCelulaCalibrada_Izquierda, (Temp_CelulaCalibrada_Abajo+Temp_CelulaCalibrada_Arriba)/2)
+IrradianciaCelulaCalibrada_Arriba    = correccion_irradiancia_celula(IrradianciaCelulaCalibrada_Arriba, Temp_CelulaCalibrada_Arriba)
+IrradianciaCelulaCalibrada_Abajo     = correccion_irradiancia_celula(IrradianciaCelulaCalibrada_Abajo, Temp_CelulaCalibrada_Abajo)
 
 
 """
