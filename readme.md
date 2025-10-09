@@ -1,6 +1,6 @@
 # Proyecto de Prácticas en Empresa del Máster en Energía de la UCM
 
-Proyecto de análisis de datos para ajustar del modelo de temperatura de Ross en sistemas BIPV con módulos fotovoltaicos serigrafiados
+Proyecto de análisis de datos para ajustar del modelo de temperatura de Ross en sistemas BIPV con módulos fotovoltaicos serigrafiados y caracterizar su Performance Ratio (PR)
 
 ## 📋 Requisitos Previos
 
