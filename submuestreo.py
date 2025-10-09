@@ -1,5 +1,6 @@
 #%%
 
+import os
 import numpy as np
 import pandas as pd
 
@@ -30,7 +31,9 @@ Aislamos la función de submuestreo en su propio archivo para facilitar la modul
 # en medidas promediadas y con menor frecuencia. Así reducimos el ruido manteniendo las tendencias principales.
 
 # Tiempo de submuestreo (en minutos)
-tiempo_submuestreo = 5
+tiempo_submuestreo = int(os.environ.get('TIEMPO_SUBMUESTREO', 5))  # 60 es valor por defecto
+#tiempo_submuestreo = 5
+
 
 def Submuestreo(df, subgroup=tiempo_submuestreo):
     df = df.copy()
