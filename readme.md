@@ -105,7 +105,7 @@ proyecto/
 ├── DatPlots.py                   # Generación de gráficos de datos
 ├── Energy and PR.py              # Cálculo de energía y Performance Ratio
 ├── Filter.py                     # Filtrado de datos
-├── histograma_irradiacion.py    # Histogramas de irradiación
+├── histograma_irradiacion.py     # Histogramas de irradiación
 ├── RossModel_fitting.py          # Ajuste del modelo Ross
 ├── submuestreo.py                # Submuestreo de datos
 ├── exportar_dataframe.py         # Exportación de dataframes
@@ -166,7 +166,7 @@ Los resultados del análisis se guardarán en:
 
 - `Datos Datalogger/` - Datos de entrada del datalogger
 - `Excel Resultados/` - Resultados exportados en Excel
-- `figuras/`          - 📁 Gráficos generados
+- `figuras/`          - Gráficos generados
 
 ## 👥 Autor
 
