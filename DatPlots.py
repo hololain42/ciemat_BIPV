@@ -18,8 +18,12 @@ DataLength = 10000
     
 # DataLoggerDataFrame["Date_local"] => 03/06/2025  7:01:13
 # output de pd.to_datetime: 03-06-2025 07:01:13
+# SIN EMBARGO, a partir del 1 de octubre la configuración del DataLogger sufrió un cambio y ya no reconoce los segundos
+# Paso a concatenar fecha y hora en vez de usar Date_local (en la práctica es lo mismo)
 
-Date = pd.to_datetime(DataLoggerDataFrame["Date_local"], dayfirst = True)
+DataLoggerDataFrame['Datetime_Correcto'] = DataLoggerDataFrame['fecha'].astype(str) + ' ' + DataLoggerDataFrame['hora'].astype(str)
+
+Date = pd.to_datetime(DataLoggerDataFrame["Datetime_Correcto"], dayfirst=True, errors='coerce')
 
 
 # Corregimos la irradiancia de la células calibradas en función de la temperatura que marquen sus termopares
@@ -78,17 +82,17 @@ Creamos el DataFrame de Irradiancia del piranómetro:
         IrradianciaPiranometro: Serie con los valores de irradiancia del piranómetro
         axis=1: Combinamos ambas series como columnas, una al lado de la otra
     Output: DataFrame con dos columnas:
-        Una columna con las fechas (mantiene el nombre original "Date_local")
+        Una columna con las fechas (concatenado de fecha y hora -> Datetime_Correcto, en vez de Date_local)
         Una columna con los valores de irradiancia
-    .set_index("Date_local", inplace=True) convierte la columna "Date_local" en el índice del DataFrame:
-        "Date_local" deja de ser una columna "normal" y pasa a ser el índice (etiqueta de las filas)
+    .set_index("Datetime_Correcto", inplace=True) convierte la columna "Datetime_Correcto" en el índice del DataFrame:
+        "Datetime_Correcto" deja de ser una columna "normal" y pasa a ser el índice (etiqueta de las filas)
         inplace=True: Modifica el DataFrame original directamente, sin crear una copia
 
 Resultado final: Un DataFrame indexado por fechas con una sola columna de datos de irradiancia
 """
 
 DataFrame_Irradiancia = pd.concat([Date,IrradianciaPiranometro], axis=1)
-DataFrame_Irradiancia.set_index("Date_local", inplace=True)
+DataFrame_Irradiancia.set_index("Datetime_Correcto", inplace=True)
 
 # Ploteamos la irradiancia del piranómetro
 fig_Gpyr = plt.figure(figsize=(12, 8))
@@ -115,7 +119,7 @@ fig_Gpyr.show()
 
 
 DataFrame_IrradianciaCelulaCalibrada_Arriba = pd.concat([Date,IrradianciaCelulaCalibrada_Arriba], axis=1)
-DataFrame_IrradianciaCelulaCalibrada_Arriba.set_index("Date_local", inplace=True)
+DataFrame_IrradianciaCelulaCalibrada_Arriba.set_index("Datetime_Correcto", inplace=True)
 
 # Ploteamos la irradiancia de la célula calibrada de arriba
 fig_G_arriba = plt.figure(figsize=(12, 8))
@@ -142,7 +146,7 @@ fig_G_arriba.show()
 
 
 DataFrame_Temp_Ambiente = pd.concat([Date,Temp_Ambiente], axis=1)
-DataFrame_Temp_Ambiente.set_index("Date_local", inplace=True)
+DataFrame_Temp_Ambiente.set_index("Datetime_Correcto", inplace=True)
 
 # Ploteamos la temperatura ambiente
 fig_T_amb = plt.figure(figsize=(12, 8))
@@ -946,7 +950,7 @@ print(f"[INFO] Submuestreo previo sin filtrar completado. Procedemos a exportar 
 print("-" * 50)
 
 # Volcamos todos los datos submuestrados y filtrados a un archivo antes de aplicarle cualquier filtro
-nombre_archivo_submuestreado = f"Datos_SIN_FILTRAR_Datalogger_DAQ970A_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
+nombre_archivo_submuestreado = f"Datos_SIN_FILTRAR_Datalogger_DAQ970A_Inic_{fecha_inicio}_Fin_{fecha_final}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
 
 # Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
 archivo_datalogger_submuestrado = combinar_dataframes_con_fechas_distintas(Antracita_submuestreo_SinFiltro, 
