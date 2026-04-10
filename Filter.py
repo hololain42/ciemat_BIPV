@@ -342,7 +342,7 @@ print(f"-Datos de Terracota filtrados y submuestrados: {len(Terracota_filtered_s
 print("-" * 50)
 
 # Volcamos todos los datos submuestrados y filtrados a un archivo antes de aplicarle cualquier filtro
-nombre_archivo_filtrado = f"Datos_filtrados_Datalogger_DAQ970A_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
+nombre_archivo_filtrado = f"Datos_filtrados_Datalogger_DAQ970A_Inic_{fecha_inicio}_Fin_{fecha_final}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
 
 # Combinamos los DataFrames filtrados de Antracita, Green y Terracota con el orden específico en un solo archivo
 archivo_datalogger_filtrado = combinar_dataframes_con_fechas_distintas(Antracita_filtered_sync_Submuestreado, 
