@@ -7,6 +7,7 @@ import os
 import subprocess
 import importlib.util
 from pathlib import Path
+from Data import mostrar_tiempo_total
 
 
 def print_header(message):
@@ -203,6 +204,7 @@ def main():
     print_header("¡PROCESO COMPLETADO EXITOSAMENTE! ✓")
     print("\nTodos los scripts se ejecutaron correctamente.")
 
+    mostrar_tiempo_total()
 
 if __name__ == "__main__":
     try:

@@ -316,7 +316,7 @@ def construir_dataframe_resultados_produccion(resultados_potencia_celulas):
 df_resultados_produccion  = construir_dataframe_resultados_produccion(resultados_potencia_celulas)
 
 # Nombre del archivo
-nombre_archivo_produccion = f"Resultados_Produccion_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
+nombre_archivo_produccion = f"Resultados_Produccion_Inic_{fecha_inicio}_Fin_{fecha_final}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
 
 # Guardamos en Excel
 with pd.ExcelWriter(nombre_archivo_produccion, engine='xlsxwriter') as writer:
@@ -513,7 +513,5 @@ fig_hist_P.savefig('figuras/Produccion_anual/Hist_Pot_sim_VS_Pot_real.pdf', bbox
 fig_hist_P.savefig('figuras/Produccion_anual/png/Hist_Pot_sim_VS_Pot_real.png', bbox_inches='tight')
 # Mostrar el gráfico
 fig_hist_P.show()
-
-mostrar_tiempo_total()
 
 # %%

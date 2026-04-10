@@ -133,27 +133,36 @@ DataLoggerDataFrame = pd.DataFrame()
 
 """
 IMPORTANTE: El sistema no estuvo completamente operativo (en su versión "final", con todas las medidas ajustadas
-piranómetro de referencia, termómetro de temperatura ambiente...) hasta principios de diciembre.
-POR TANTO, vamos a coger datos desde el solsticio de invierno (21 de diciembre de 2024), ignorando todos los datos previos
+piranómetro de referencia, termómetro de temperatura ambiente...) hasta principios de diciembre de 2024.
+POR TANTO, vamos a coger datos desde el 1 de enero de 2025, ignorando todos los datos previos, hasta el 31 de diciembre de 2025,
+completando un año natural.
 """
 
 num_arch = len(Dataloggerfiles)
 print("-" * 50)
 print(f"Total de archivos del Datalogger: {num_arch}")
 
-fecha_solsticio = "2024_12_21"
+fecha_inicio = "2025_01_01"
+fecha_final = "2025_12_11"
 fecha_ultimo_arch = Dataloggerfiles[-1].split("_DAQ970A_Colores")[0]
 
 try:
-    num_arch_solsticio = next(i for i, archivo in enumerate(Dataloggerfiles) 
-                             if fecha_solsticio in archivo)
-    print(f"Índice del archivo correspondiente al solsticio: {num_arch_solsticio}")
+    num_arch_inicio = next(i for i, archivo in enumerate(Dataloggerfiles) 
+                             if fecha_inicio in archivo)
+    print(f"Índice del archivo correspondiente al inicio: {num_arch_inicio}")
 except StopIteration:
-    print(f"Archivo del {fecha_solsticio} no encontrado en el directorio")
+    print(f"Archivo {num_arch_inicio} no encontrado en el directorio")
 
-num_arch_analizables = num_arch - num_arch_solsticio
-print(f"Archivos desde el solsticio de invierno (21/12/24): {num_arch_analizables}")
-print(f"->Analizamos datos desde el " + Dataloggerfiles[num_arch_solsticio].split("_DAQ970A_Colores")[0] + " al " + Dataloggerfiles[-1].split("_DAQ970A_Colores")[0])
+try:
+    num_arch_final = next(i for i, archivo in enumerate(Dataloggerfiles) 
+                             if fecha_final in archivo)
+    print(f"Índice del archivo correspondiente al inicio: {num_arch_final}")
+except StopIteration:
+    print(f"Archivo {num_arch_final} no encontrado en el directorio")
+
+num_arch_analizables = num_arch_final - num_arch_inicio + 1 
+print(f"Archivos a analizar: {num_arch_analizables}")
+print(f"->Analizamos datos desde el " + Dataloggerfiles[num_arch_inicio].split("_DAQ970A_Colores")[0] + " al " + Dataloggerfiles[num_arch_final].split("_DAQ970A_Colores")[0])
 
 # Loggear la primera aparición del canal 220 (Potencia AC Inversor Huawei)
 primer_canal_220 = None
@@ -164,10 +173,10 @@ iter = 0
 
 print("-" * 50)
 print(f"[INFO] Comienza el procesado de archivos:")
-for i in Dataloggerfiles[num_arch_solsticio:]:
+for i in Dataloggerfiles[num_arch_inicio:num_arch_final+1]:
+#for i in Dataloggerfiles[num_arch-1:]:
 
     try:
-        # print(f"Abriendo archivo {i}")
 
         with open("Datos Datalogger/DAQ970A/" + i, 'r', encoding='latin1') as f:
             columns = f.readlines()

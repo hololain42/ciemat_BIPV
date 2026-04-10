@@ -511,7 +511,7 @@ df_Terracota_excel  = construir_dataframe_resultados_NOCT("Terracota", resultado
 df_resultados_final = pd.concat([df_Antracita_excel, df_Green_excel, df_Terracota_excel], axis=1)
 
 # Guardamos en Excel
-nombre_archivo_resultados = f"Resultados_NOCT_Modelo_Ross_Inic_{fecha_solsticio}_Fin_{fecha_ultimo_arch}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
+nombre_archivo_resultados = f"Resultados_NOCT_Modelo_Ross_Inic_{fecha_inicio}_Fin_{fecha_final}_Submuestreo_{tiempo_submuestreo}_min.xlsx"
 
 with pd.ExcelWriter(nombre_archivo_resultados, engine='xlsxwriter') as writer:
     df_resultados_final.to_excel(writer, sheet_name='Resumen', startrow=0, merge_cells=True)
